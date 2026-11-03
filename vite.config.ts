@@ -7,7 +7,7 @@ export default defineConfig({
     preact(),
     VitePWA({
       registerType: 'prompt',
-      injectRegister: 'script-defer',
+      injectRegister: false,
       manifest: false,
       workbox: {
         navigateFallback: '/index.html',

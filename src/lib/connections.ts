@@ -6,7 +6,12 @@ export const CONN_META: Record<EffState, { word: string; icon: string; rank: num
   locked: { word: 'Locked', icon: 'lock', rank: 2 },
   connected: { word: 'Connected', icon: 'check', rank: 3 },
 };
-export interface Eff { state: EffState; wasStored: 1 | 2 | 3; waitingFor: Module[]; adapter: boolean }
+export interface Eff {
+  state: EffState;
+  wasStored: 1 | 2 | 3;
+  waitingFor: Module[];
+  adapter: boolean;
+}
 
 export function effective(c: Connection, a: Module | undefined, b: Module | undefined): Eff {
   const waitingFor = [a, b].filter((m): m is Module => !!m && m.status !== 3);

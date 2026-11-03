@@ -1,25 +1,51 @@
 /* Forest & Flare tokens. The only file allowed to hold hex values. */
 @layer tokens {
   :root {
-    --canvas: #e6dfcf; --surface: #f0ebdd; --text: #242620; --text-2: #5c6257;
-    --brand: #294e42; --on-brand: #f1f4ec; --brand-hover: #203c31;
-    --separator: #c6c1b4; --control-edge: #6b7566; --selected: #d3dec8;
-    --flare: #df3e31; --flare-text: #ac3026; /* flare: graphic marks (flag dots) only; text uses --flare-text */
-    --success: #17645f; --warning: #7a5c0c; --error: #8e1f1a;
-    --band: #294e42; --on-band: #f1f4ec; --on-band-2: #c9d7c0;
-    --focus: var(--text); --focus-on-band: #f1f4ec;
+    --canvas: #e6dfcf;
+    --surface: #f0ebdd;
+    --text: #242620;
+    --text-2: #5c6257;
+    --brand: #294e42;
+    --on-brand: #f1f4ec;
+    --brand-hover: #203c31;
+    --separator: #c6c1b4;
+    --control-edge: #6b7566;
+    --selected: #d3dec8;
+    --flare: #df3e31;
+    --flare-text: #ac3026; /* flare: graphic marks (flag dots) only; text uses --flare-text */
+    --success: #17645f;
+    --warning: #7a5c0c;
+    --error: #8e1f1a;
+    --band: #294e42;
+    --on-band: #f1f4ec;
+    --on-band-2: #c9d7c0;
+    --focus: var(--text);
+    --focus-on-band: #f1f4ec;
     --pale: #ece6d8; /* filtered-out bay fill; text on it stays --text */
 
     color-scheme: light;
   }
 
   :root[data-theme='dark'] {
-    --canvas: #141e19; --surface: #20352b; --text: #e6dfcf; --text-2: #b3bdae;
-    --brand: #a9c0a6; --on-brand: #141e19; --brand-hover: #c9d7c0;
-    --separator: #33483c; --control-edge: #8a9a88; --selected: #2d4a3b;
-    --flare: #f17c6f; --flare-text: #f17c6f;
-    --success: #7fd0c6; --warning: #e0bc5c; --error: #ff9c8f;
-    --band: #1b3329; --on-band: #e6dfcf; --on-band-2: #a9c0a6; --focus-on-band: #e6dfcf;
+    --canvas: #141e19;
+    --surface: #20352b;
+    --text: #e6dfcf;
+    --text-2: #b3bdae;
+    --brand: #a9c0a6;
+    --on-brand: #141e19;
+    --brand-hover: #c9d7c0;
+    --separator: #33483c;
+    --control-edge: #8a9a88;
+    --selected: #2d4a3b;
+    --flare: #f17c6f;
+    --flare-text: #f17c6f;
+    --success: #7fd0c6;
+    --warning: #e0bc5c;
+    --error: #ff9c8f;
+    --band: #1b3329;
+    --on-band: #e6dfcf;
+    --on-band-2: #a9c0a6;
+    --focus-on-band: #e6dfcf;
     --pale: #1a2a22;
 
     color-scheme: dark;
@@ -28,8 +54,18 @@
   :root {
     --sans: 'Geist Variable', system-ui, sans-serif;
     --mono: 'Geist Mono Variable', ui-monospace, monospace;
-    --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px; --s7: 48px; --s8: 64px;
-    --r-control: 4px; --r-float: 8px;
-    --fast: 150ms; --disclose: 240ms; --ease: cubic-bezier(0.16, 1, 0.3, 1);
+    --s1: 4px;
+    --s2: 8px;
+    --s3: 12px;
+    --s4: 16px;
+    --s5: 24px;
+    --s6: 32px;
+    --s7: 48px;
+    --s8: 64px;
+    --r-control: 4px;
+    --r-float: 8px;
+    --fast: 150ms;
+    --disclose: 240ms;
+    --ease: cubic-bezier(0.16, 1, 0.3, 1);
   }
 }

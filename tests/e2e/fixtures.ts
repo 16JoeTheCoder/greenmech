@@ -31,16 +31,49 @@ export async function seed(opts: { sample?: boolean; count?: number } = {}) {
     await setDoc(doc(f, 'config/app'), { staleDays: 7, lastBackupAt: ts });
     const b = writeBatch(f);
     const mod = (id: string, slug: string, status: number, tier: number, order: number, ports = { in: 'none', out: 'none' }, purpose = '') => {
-      b.set(doc(f, 'modules', id), { slug, status, tier, order, purpose, hasModel: false, ports, leaderUid: null, leaderInitials: null,
-        createdAt: ts, createdBy: 'seed', updatedAt: ts, updatedBy: 'seed', deletedAt: null });
+      b.set(doc(f, 'modules', id), {
+        slug,
+        status,
+        tier,
+        order,
+        purpose,
+        hasModel: false,
+        ports,
+        leaderUid: null,
+        leaderInitials: null,
+        createdAt: ts,
+        createdBy: 'seed',
+        updatedAt: ts,
+        updatedBy: 'seed',
+        deletedAt: null,
+      });
       b.set(doc(f, 'slugs', slug), { kind: 'module', refId: id });
     };
     if (opts.sample) {
-      const s = sample as unknown as { tiers: string[][]; modules: Record<string, { status: number; in: string; out: string; purpose: string }>; connections: string[][] };
-      s.tiers.forEach((row, t) => row.forEach((slug, o) => { const d = s.modules[slug]; mod(`m-${slug}`, slug, d.status, t, o, { in: d.in, out: d.out }, d.purpose); }));
+      const s = sample as unknown as {
+        tiers: string[][];
+        modules: Record<string, { status: number; in: string; out: string; purpose: string }>;
+        connections: string[][];
+      };
+      s.tiers.forEach((row, t) =>
+        row.forEach((slug, o) => {
+          const d = s.modules[slug];
+          mod(`m-${slug}`, slug, d.status, t, o, { in: d.in, out: d.out }, d.purpose);
+        }),
+      );
       for (const [slug, a, c] of s.connections) {
         const id = `m-${a}__m-${c}`;
-        b.set(doc(f, 'connections', id), { slug, aId: `m-${a}`, bId: `m-${c}`, state: 1, createdAt: ts, createdBy: 'seed', updatedAt: ts, updatedBy: 'seed', deletedAt: null });
+        b.set(doc(f, 'connections', id), {
+          slug,
+          aId: `m-${a}`,
+          bId: `m-${c}`,
+          state: 1,
+          createdAt: ts,
+          createdBy: 'seed',
+          updatedAt: ts,
+          updatedBy: 'seed',
+          deletedAt: null,
+        });
         b.set(doc(f, 'slugs', slug), { kind: 'connection', refId: id });
       }
     }

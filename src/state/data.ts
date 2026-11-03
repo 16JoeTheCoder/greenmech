@@ -50,21 +50,67 @@ let unsub: (() => void)[] = [];
 export function startData() {
   stopData();
   const filt = (c: string) => (isAdmin.value ? collection(db, c) : query(collection(db, c), where('deletedAt', '==', null)));
-  const withId = <T,>(d: { id: string; data: () => DocumentData }) => ({ id: d.id, ...d.data() }) as T;
+  const withId = <T>(d: { id: string; data: () => DocumentData }) => ({ id: d.id, ...d.data() }) as T;
   let pending = 3;
-  const done = () => { if (--pending === 0) loaded.value = true; };
-  const once = () => { let first = true; return () => { if (first) { first = false; done(); } }; };
-  const a = once(), b = once(), c = once();
+  const done = () => {
+    if (--pending === 0) loaded.value = true;
+  };
+  const once = () => {
+    let first = true;
+    return () => {
+      if (first) {
+        first = false;
+        done();
+      }
+    };
+  };
+  const a = once(),
+    b = once(),
+    c = once();
   unsub.push(
-    onSnapshot(filt('modules'), { includeMetadataChanges: false }, (s) => { modules.value = s.docs.map((d) => withId<Module>(d)); a(); }, onListenError),
-    onSnapshot(filt('connections'), (s) => { connections.value = s.docs.map((d) => withId<Connection>(d)); b(); }, onListenError),
-    onSnapshot(query(collection(db, 'flags'), where('resolved', '==', false)), (s) => { openFlags.value = s.docs.map((d) => withId<Flag>(d)); c(); }, onListenError),
-    onSnapshotsInSync(db, () => { if (inflight.value === 0) sync.value = navigator.onLine ? 'saved' : 'offline'; }),
+    onSnapshot(
+      filt('modules'),
+      { includeMetadataChanges: false },
+      (s) => {
+        modules.value = s.docs.map((d) => withId<Module>(d));
+        a();
+      },
+      onListenError,
+    ),
+    onSnapshot(
+      filt('connections'),
+      (s) => {
+        connections.value = s.docs.map((d) => withId<Connection>(d));
+        b();
+      },
+      onListenError,
+    ),
+    onSnapshot(
+      query(collection(db, 'flags'), where('resolved', '==', false)),
+      (s) => {
+        openFlags.value = s.docs.map((d) => withId<Flag>(d));
+        c();
+      },
+      onListenError,
+    ),
+    onSnapshotsInSync(db, () => {
+      if (inflight.value === 0) sync.value = navigator.onLine ? 'saved' : 'offline';
+    }),
   );
-  getDoc(doc(db, 'config/app')).then((s) => { if (s.exists()) config.value = s.data() as typeof config.value; }).catch(() => {});
+  getDoc(doc(db, 'config/app'))
+    .then((s) => {
+      if (s.exists()) config.value = s.data() as typeof config.value;
+    })
+    .catch(() => {});
 }
-export function stopData() { unsub.forEach((u) => u()); unsub = []; loaded.value = false; }
-function onListenError(e: Error) { toast(`Could not load data: ${e.message}. Reload the page; if it keeps happening, ask the admin.`); }
+export function stopData() {
+  unsub.forEach((u) => u());
+  unsub = [];
+  loaded.value = false;
+}
+function onListenError(e: Error) {
+  toast(`Could not load data: ${e.message}. Reload the page; if it keeps happening, ask the admin.`);
+}
 
 // ---------- sync indicator ----------
 export const sync = signal<'saved' | 'saving' | 'offline'>('saved');
@@ -73,13 +119,22 @@ addEventListener('online', () => (sync.value = inflight.value ? 'saving' : 'save
 addEventListener('offline', () => (sync.value = 'offline'));
 
 // ---------- toasts and undo ----------
-export interface Toast { id: number; text: string; undo?: UndoEntry; tone?: 'error' }
+export interface Toast {
+  id: number;
+  text: string;
+  undo?: UndoEntry;
+  tone?: 'error';
+}
 export const toasts = signal<Toast[]>([]);
 let tid = 0;
 export function toast(text: string, undo?: UndoEntry, tone?: 'error') {
   const t = { id: ++tid, text, undo, tone };
   toasts.value = [t];
   return t.id;
+}
+/** PWA update: offered in the toast, never forced. */
+export function offerUpdate(reload: () => void) {
+  toast('A new version of Greenmech is ready.', { label: 'Reload', wrote: {}, targetPath: null, run: async () => reload(), at: Date.now() + 1e12 });
 }
 export const dismissToast = (id: number) => (toasts.value = toasts.value.filter((t) => t.id !== id));
 
@@ -93,14 +148,18 @@ export async function runUndo(t: Toast) {
     try {
       const s = await getDoc(doc(db, u.targetPath));
       current = s.exists() ? s.data() : undefined;
-    } catch { current = undefined; }
+    } catch {
+      current = undefined;
+    }
     if (undoConflict(u, current, user.value!.uid)) {
       let who = 'Someone';
       try {
         const id = u.targetPath.split('/')[1];
         const a = await getDocs(query(collection(db, 'activity'), where('targetId', '==', id), orderBy('at', 'desc'), limit(1)));
         if (!a.empty) who = (a.docs[0].data() as Activity).actorInitials;
-      } catch { /* keep generic */ }
+      } catch {
+        /* keep generic */
+      }
       return toast(`${who} changed this since. Can't undo.`);
     }
   }
@@ -113,7 +172,13 @@ const me = () => user.value!.uid;
 const audit = () => ({ updatedAt: serverTimestamp(), updatedBy: me() });
 function act(b: WriteBatch, type: string, targetKind: Activity['targetKind'], targetId: string, targetSlug: string | null, summary: string) {
   b.set(doc(collection(db, 'activity')), {
-    at: serverTimestamp(), actorUid: me(), actorInitials: initials.value, type, targetKind, targetId, targetSlug,
+    at: serverTimestamp(),
+    actorUid: me(),
+    actorInitials: initials.value,
+    type,
+    targetKind,
+    targetId,
+    targetSlug,
     summary: summary.slice(0, 200),
   });
 }
@@ -121,10 +186,19 @@ function act(b: WriteBatch, type: string, targetKind: Activity['targetKind'], ta
 function commit(b: WriteBatch, failMsg: string): Promise<void> {
   inflight.value++;
   sync.value = navigator.onLine ? 'saving' : 'offline';
-  const p = b.commit().then(
-    () => {},
-    (e: Error) => { toast(`${failMsg}: ${friendly(e)}`, undefined, 'error'); throw e; },
-  ).finally(() => { inflight.value--; if (!inflight.value && navigator.onLine) sync.value = 'saved'; });
+  const p = b
+    .commit()
+    .then(
+      () => {},
+      (e: Error) => {
+        toast(`${failMsg}: ${friendly(e)}`, undefined, 'error');
+        throw e;
+      },
+    )
+    .finally(() => {
+      inflight.value--;
+      if (!inflight.value && navigator.onLine) sync.value = 'saved';
+    });
   p.catch(() => {});
   return Promise.resolve();
 }
@@ -132,8 +206,13 @@ function friendly(e: Error & { code?: string }) {
   if (e.code === 'permission-denied') return 'you do not have permission for this. Ask the module leader or the admin';
   return e.message;
 }
-const undoable = (label: string, path: string | null, wrote: Record<string, unknown>, run: () => Promise<void>): UndoEntry =>
-  ({ label, targetPath: path, wrote, run, at: Date.now() });
+const undoable = (label: string, path: string | null, wrote: Record<string, unknown>, run: () => Promise<void>): UndoEntry => ({
+  label,
+  targetPath: path,
+  wrote,
+  run,
+  at: Date.now(),
+});
 
 const mod = (id: string) => byId.value.get(id)!;
 const mref = (id: string) => doc(db, 'modules', id);
@@ -147,7 +226,10 @@ export function setStatus(id: string, status: Status, opts: { silent?: boolean }
   act(b, 'status', 'module', id, m.slug, `set ${m.slug} to ${STATUS[status].word}`);
   commit(b, 'Status not saved');
   if (!opts.silent)
-    toast(`${m.slug} is now ${STATUS[status].word}.`, undoable('status', `modules/${id}`, { status }, async () => setStatus(id, prev, { silent: true })));
+    toast(
+      `${m.slug} is now ${STATUS[status].word}.`,
+      undoable('status', `modules/${id}`, { status }, async () => setStatus(id, prev, { silent: true })),
+    );
 }
 
 export function takeModule(id: string, silent = false) {
@@ -156,7 +238,11 @@ export function takeModule(id: string, silent = false) {
   b.update(mref(id), { leaderUid: me(), leaderInitials: initials.value, ...audit() });
   act(b, 'take', 'module', id, m.slug, `took the lead on ${m.slug}`);
   commit(b, 'Could not take the module');
-  if (!silent) toast(`You lead ${m.slug} now.`, undoable('take', `modules/${id}`, { leaderUid: me() }, async () => stepDown(id, true)));
+  if (!silent)
+    toast(
+      `You lead ${m.slug} now.`,
+      undoable('take', `modules/${id}`, { leaderUid: me() }, async () => stepDown(id, true)),
+    );
 }
 export function stepDown(id: string, silent = false) {
   const m = mod(id);
@@ -164,7 +250,11 @@ export function stepDown(id: string, silent = false) {
   b.update(mref(id), { leaderUid: null, leaderInitials: null, ...audit() });
   act(b, 'stepdown', 'module', id, m.slug, `stepped down from ${m.slug}`);
   commit(b, 'Could not step down');
-  if (!silent) toast(`You stepped down from ${m.slug}.`, undoable('stepdown', `modules/${id}`, { leaderUid: null }, async () => takeModule(id, true)));
+  if (!silent)
+    toast(
+      `You stepped down from ${m.slug}.`,
+      undoable('stepdown', `modules/${id}`, { leaderUid: null }, async () => takeModule(id, true)),
+    );
 }
 export function assignLeader(id: string, uid: string | null, ini: string | null) {
   const m = mod(id);
@@ -181,7 +271,11 @@ export function updateModule(id: string, fields: Partial<Pick<Module, 'purpose' 
   b.update(mref(id), { ...fields, ...audit() });
   act(b, 'edit', 'module', id, m.slug, summary);
   commit(b, 'Change not saved');
-  if (undo) toast(`Saved. ${summary[0].toUpperCase()}${summary.slice(1)}.`, undoable('edit', `modules/${id}`, fields, async () => updateModule(id, prev as typeof fields, `undid: ${summary}`, false)));
+  if (undo)
+    toast(
+      `Saved. ${summary[0].toUpperCase()}${summary.slice(1)}.`,
+      undoable('edit', `modules/${id}`, fields, async () => updateModule(id, prev as typeof fields, `undid: ${summary}`, false)),
+    );
 }
 
 /** Rename (module or connection): one batch writes the registry entry and the new slug. Retired slugs stay reserved and redirect. */
@@ -191,21 +285,38 @@ export async function rename(kind: 'module' | 'connection', id: string, next: st
   const prev = cur.slug;
   const b = writeBatch(db);
   const reg = await getDoc(doc(db, 'slugs', next)).catch(() => null);
-  if (reg?.exists() && reg.data().refId !== id) { toast(`"${next}" is already used. Pick another name.`, undefined, 'error'); return; }
+  if (reg?.exists() && reg.data().refId !== id) {
+    toast(`"${next}" is already used. Pick another name.`, undefined, 'error');
+    return;
+  }
   if (!reg?.exists()) b.set(doc(db, 'slugs', next), { kind, refId: id });
   b.update(doc(db, coll, id), { slug: next, ...audit() });
   act(b, 'rename', kind, id, next, `renamed ${prev} to ${next}`);
   commit(b, 'Rename not saved');
   if (!silent)
-    toast(`Renamed to ${next}. Old links keep working.`, undoable('rename', `${coll}/${id}`, { slug: next }, () => rename(kind, id, prev, true)));
+    toast(
+      `Renamed to ${next}. Old links keep working.`,
+      undoable('rename', `${coll}/${id}`, { slug: next }, () => rename(kind, id, prev, true)),
+    );
 }
 
 export function createModule(slug: string, purpose: string): string {
   const ref = doc(collection(db, 'modules'));
   const b = writeBatch(db);
   b.set(ref, {
-    slug, status: 0, tier: -1, order: 0, purpose, hasModel: false, ports: { in: 'none', out: 'none' }, leaderUid: null, leaderInitials: null,
-    createdAt: serverTimestamp(), createdBy: me(), ...audit(), deletedAt: null,
+    slug,
+    status: 0,
+    tier: -1,
+    order: 0,
+    purpose,
+    hasModel: false,
+    ports: { in: 'none', out: 'none' },
+    leaderUid: null,
+    leaderInitials: null,
+    createdAt: serverTimestamp(),
+    createdBy: me(),
+    ...audit(),
+    deletedAt: null,
   });
   b.set(doc(db, 'slugs', slug), { kind: 'module', refId: ref.id });
   act(b, 'create', 'module', ref.id, slug, `added ${slug}`);
@@ -222,8 +333,10 @@ export function softDelete(kind: 'module' | 'connection', id: string, restore = 
   act(b, restore ? 'restore' : 'remove', kind, id, slug, `${restore ? 'restored' : 'removed'} ${slug}`);
   commit(b, restore ? 'Not restored' : 'Not removed');
   if (!silent)
-    toast(restore ? `Restored ${slug}.` : `Removed ${slug}. The admin can restore it in Manage.`,
-      restore ? undefined : undoable('remove', null, {}, async () => softDelete(kind, id, true, true)));
+    toast(
+      restore ? `Restored ${slug}.` : `Removed ${slug}. The admin can restore it in Manage.`,
+      restore ? undefined : undoable('remove', null, {}, async () => softDelete(kind, id, true, true)),
+    );
 }
 
 // ---------- connections ----------
@@ -245,7 +358,11 @@ export function setConnState(id: string, state: 1 | 2 | 3, silent = false) {
   b.update(doc(db, 'connections', id), { state, ...audit() });
   act(b, 'connstate', 'connection', id, c.slug, `set ${c.slug} to ${CWORD[state]}`);
   commit(b, 'Connection state not saved');
-  if (!silent) toast(`${c.slug} is ${CWORD[state]}.`, undoable('connstate', `connections/${id}`, { state }, async () => setConnState(id, prev, true)));
+  if (!silent)
+    toast(
+      `${c.slug} is ${CWORD[state]}.`,
+      undoable('connstate', `connections/${id}`, { state }, async () => setConnState(id, prev, true)),
+    );
 }
 
 // ---------- discussion and references (hard delete, undo re-creates same id + content) ----------
@@ -261,7 +378,16 @@ export function addFlag(moduleId: string, text: string) {
   const m = mod(moduleId);
   const ref = doc(collection(db, 'flags'));
   const b = writeBatch(db);
-  b.set(ref, { moduleId, text, authorUid: me(), authorInitials: initials.value, resolved: false, resolvedBy: null, createdAt: serverTimestamp(), resolvedAt: null });
+  b.set(ref, {
+    moduleId,
+    text,
+    authorUid: me(),
+    authorInitials: initials.value,
+    resolved: false,
+    resolvedBy: null,
+    createdAt: serverTimestamp(),
+    resolvedAt: null,
+  });
   act(b, 'flag', 'module', moduleId, m.slug, `flagged ${m.slug}: ${text}`);
   commit(b, 'Flag not saved');
 }
@@ -271,7 +397,11 @@ export function resolveFlag(f: Flag, resolved: boolean, silent = false) {
   b.update(doc(db, 'flags', f.id), resolved ? { resolved, resolvedBy: me(), resolvedAt: serverTimestamp() } : { resolved, resolvedBy: null, resolvedAt: null });
   act(b, resolved ? 'resolve' : 'unresolve', 'module', f.moduleId, m.slug, `${resolved ? 'resolved' : 'reopened'} a flag on ${m.slug}`);
   commit(b, 'Flag not updated');
-  if (!silent && resolved) toast('Flag resolved.', undoable('resolve', `flags/${f.id}`, { resolved: true }, async () => resolveFlag(f, false, true)));
+  if (!silent && resolved)
+    toast(
+      'Flag resolved.',
+      undoable('resolve', `flags/${f.id}`, { resolved: true }, async () => resolveFlag(f, false, true)),
+    );
 }
 export function removeDoc(coll: 'ideas' | 'flags' | 'refs', id: string, data: Record<string, unknown>, label: string) {
   const moduleId = data.moduleId as string;
@@ -280,14 +410,17 @@ export function removeDoc(coll: 'ideas' | 'flags' | 'refs', id: string, data: Re
   b.delete(doc(db, coll, id));
   act(b, 'delete', 'module', moduleId, m.slug, `deleted ${label} on ${m.slug}`);
   commit(b, 'Not deleted');
-  toast(`Deleted ${label}.`, undoable('delete', null, {}, async () => {
-    const r = writeBatch(db);
-    // flags are re-created unresolved: the rules only allow creating open flags
-    const restored = coll === 'flags' ? { ...data, resolved: false, resolvedBy: null, resolvedAt: null } : data;
-    r.set(doc(db, coll, id), restored);
-    act(r, 'restore', 'module', moduleId, m.slug, `restored ${label} on ${m.slug}`);
-    commit(r, 'Not restored');
-  }));
+  toast(
+    `Deleted ${label}.`,
+    undoable('delete', null, {}, async () => {
+      const r = writeBatch(db);
+      // flags are re-created unresolved: the rules only allow creating open flags
+      const restored = coll === 'flags' ? { ...data, resolved: false, resolvedBy: null, resolvedAt: null } : data;
+      r.set(doc(db, coll, id), restored);
+      act(r, 'restore', 'module', moduleId, m.slug, `restored ${label} on ${m.slug}`);
+      commit(r, 'Not restored');
+    }),
+  );
 }
 export function addRef(moduleId: string, r: { kind: 'link' | 'vector'; title: string; url: string | null; data: string | null }) {
   const m = mod(moduleId);

@@ -22,7 +22,10 @@ export function render(admins: string[]): string {
 const isMain = process.argv[1] && import.meta.url.endsWith(process.argv[1].split('/').pop()!);
 if (isMain) {
   const args = process.argv.slice(2);
-  const flag = (n: string) => { const i = args.indexOf(n); return i >= 0 ? args[i + 1] : undefined; };
+  const flag = (n: string) => {
+    const i = args.indexOf(n);
+    return i >= 0 ? args[i + 1] : undefined;
+  };
   const raw = flag('--admins');
   const admins = validateAdmins(raw ? raw.split(',') : JSON.parse(readFileSync('config/admins.json', 'utf8')).admins);
   const out = flag('--out') ?? 'firestore.rules';

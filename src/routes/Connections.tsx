@@ -26,11 +26,13 @@ export default function ConnectionsView({ slug }: { slug?: string }) {
   const sel = slug ? connBySlug.value.get(slug) : undefined;
   useEffect(() => {
     if (!slug || sel) return setLookup('idle');
-    getDoc(doc(db, 'slugs', slug)).then((s) => {
-      const c = s.exists() ? connections.value.find((x) => x.id === s.data().refId) : undefined;
-      if (c && !c.deletedAt) nav(`/c/${c.slug}`, { replace: true });
-      else setLookup('missing');
-    }).catch(() => setLookup('missing'));
+    getDoc(doc(db, 'slugs', slug))
+      .then((s) => {
+        const c = s.exists() ? connections.value.find((x) => x.id === s.data().refId) : undefined;
+        if (c && !c.deletedAt) nav(`/c/${c.slug}`, { replace: true });
+        else setLookup('missing');
+      })
+      .catch(() => setLookup('missing'));
   }, [slug, !!sel]);
   if (slug && !sel && lookup === 'missing') return <NotFound what="connection" />;
 
@@ -39,7 +41,10 @@ export default function ConnectionsView({ slug }: { slug?: string }) {
   const pick = (m: Module) => {
     if (linking) {
       if (!linking.a) setLinking({ a: m.id });
-      else if (linking.a !== m.id) { setPair({ a: linking.a, b: m.id }); setLinking(null); }
+      else if (linking.a !== m.id) {
+        setPair({ a: linking.a, b: m.id });
+        setLinking(null);
+      }
       return;
     }
     nav(`/m/${m.slug}`);
@@ -48,27 +53,80 @@ export default function ConnectionsView({ slug }: { slug?: string }) {
   return (
     <div class="gm-page">
       <div class="gm-titlerow">
-        <h1>{sel ? <>Connection <Slug>{sel.slug}</Slug></> : 'Connections'}</h1>
-        {canPost.value && !linking && !pair && <Button icon="link" onClick={() => setLinking({ a: null })}>Link modules</Button>}
+        <h1>
+          {sel ? (
+            <>
+              Connection <Slug>{sel.slug}</Slug>
+            </>
+          ) : (
+            'Connections'
+          )}
+        </h1>
+        {canPost.value && !linking && !pair && (
+          <Button icon="link" onClick={() => setLinking({ a: null })}>
+            Link modules
+          </Button>
+        )}
       </div>
-      <p class="gm-quiet gm-measure">A connection is where one module feeds the next. It can be worked on once both modules are Done; until then it shows as Locked.</p>
+      <p class="gm-quiet gm-measure">
+        A connection is where one module feeds the next. It can be worked on once both modules are Done; until then it shows as Locked.
+      </p>
       {linking && (
         <div class="gm-linkbar" role="status">
-          <span>{!linking.a ? 'Pick the module that sends (A), on the drawing or below.' : <>Now pick the module <Slug>{byId.value.get(linking.a)!.slug}</Slug> feeds (B).</>}</span>
-          <Button variant="quiet" onClick={() => setLinking(null)}>Cancel</Button>
+          <span>
+            {!linking.a ? (
+              'Pick the module that sends (A), on the drawing or below.'
+            ) : (
+              <>
+                Now pick the module <Slug>{byId.value.get(linking.a)!.slug}</Slug> feeds (B).
+              </>
+            )}
+          </span>
+          <Button variant="quiet" onClick={() => setLinking(null)}>
+            Cancel
+          </Button>
         </div>
       )}
-      {(linking || pair) && <PairForm initial={pair} onCancel={() => { setPair(null); setLinking(null); }} onDone={(s) => { setPair(null); setLinking(null); nav(`/c/${s}`); }} />}
-      {live.value.length === 0 ? <Empty><p>No modules yet, so nothing to connect.</p></Empty> : (
+      {(linking || pair) && (
+        <PairForm
+          initial={pair}
+          onCancel={() => {
+            setPair(null);
+            setLinking(null);
+          }}
+          onDone={(s) => {
+            setPair(null);
+            setLinking(null);
+            nav(`/c/${s}`);
+          }}
+        />
+      )}
+      {live.value.length === 0 ? (
+        <Empty>
+          <p>No modules yet, so nothing to connect.</p>
+        </Empty>
+      ) : (
         <div class="gm-conn-layout">
           {wide && (
-            <Elevation modules={live.value} flags={flagsByModule.value} onPick={pick} mode="connections" conns={cs} byId={byId.value}
-              selectedConn={sel?.id ?? null} onPickConn={(c) => nav(`/c/${c.slug}`)} selectedId={linking?.a ?? null} pickHint={hint} />
+            <Elevation
+              modules={live.value}
+              flags={flagsByModule.value}
+              onPick={pick}
+              mode="connections"
+              conns={cs}
+              byId={byId.value}
+              selectedConn={sel?.id ?? null}
+              onPickConn={(c) => nav(`/c/${c.slug}`)}
+              selectedId={linking?.a ?? null}
+              pickHint={hint}
+            />
           )}
           <aside class="gm-conn-side">
             {sel && <Detail c={sel} />}
             <h2 class="gm-h3">All connections</h2>
-            {sorted.length === 0 ? <p class="gm-quiet">No connections yet. Link two modules to plan how the ball travels.</p> : (
+            {sorted.length === 0 ? (
+              <p class="gm-quiet">No connections yet. Link two modules to plan how the ball travels.</p>
+            ) : (
               <ul class="gm-connlist">
                 {sorted.map((c) => {
                   const e = effOf(c);
@@ -76,7 +134,9 @@ export default function ConnectionsView({ slug }: { slug?: string }) {
                     <li key={c.id} class={c.id === sel?.id ? 'gm-connlist-on' : ''}>
                       <Link href={`/c/${c.slug}`} class="gm-connrow" aria-current={c.id === sel?.id ? 'true' : undefined}>
                         <span class="gm-slug">{c.slug}</span>
-                        <span class="gm-quiet"><span class="gm-mono">{byId.value.get(c.aId)?.slug}</span> to <span class="gm-mono">{byId.value.get(c.bId)?.slug}</span></span>
+                        <span class="gm-quiet">
+                          <span class="gm-mono">{byId.value.get(c.aId)?.slug}</span> to <span class="gm-mono">{byId.value.get(c.bId)?.slug}</span>
+                        </span>
                         <ConnBadge eff={e} />
                       </Link>
                     </li>
@@ -97,7 +157,13 @@ function WaitText({ e }: { e: Eff }) {
     <p>
       Waiting for{' '}
       {e.waitingFor.map((m, i) => (
-        <span key={m.id}>{i > 0 && ' and '}<Link href={`/m/${m.slug}`} class="gm-slug">{m.slug}</Link> (now {STATUS[m.status].word}) to be Done</span>
+        <span key={m.id}>
+          {i > 0 && ' and '}
+          <Link href={`/m/${m.slug}`} class="gm-slug">
+            {m.slug}
+          </Link>{' '}
+          (now {STATUS[m.status].word}) to be Done
+        </span>
       ))}
       .
     </p>
@@ -105,7 +171,8 @@ function WaitText({ e }: { e: Eff }) {
 }
 
 function Detail({ c }: { c: Connection }) {
-  const a = byId.value.get(c.aId)!, b = byId.value.get(c.bId)!;
+  const a = byId.value.get(c.aId)!,
+    b = byId.value.get(c.bId)!;
   const e = effOf(c);
   const uid = user.value!.uid;
   const admin = isAdmin.value && uiRole.value === 'admin';
@@ -114,18 +181,49 @@ function Detail({ c }: { c: Connection }) {
     <section class="gm-detail" aria-label={`Connection ${c.slug}`}>
       {may ? <SlugEditor kind="connection" id={c.id} slug={c.slug} label="connection" /> : null}
       <p class="gm-ends">
-        <Link href={`/m/${a.slug}`} class="gm-chiplink"><span class="gm-slug">{a.slug}</span><span class="gm-quiet">sends {a.ports.out}</span></Link>
-        <span aria-hidden="true">feeds</span><span class="gm-sr">feeds</span>
-        <Link href={`/m/${b.slug}`} class="gm-chiplink"><span class="gm-slug">{b.slug}</span><span class="gm-quiet">takes {b.ports.in}</span></Link>
+        <Link href={`/m/${a.slug}`} class="gm-chiplink">
+          <span class="gm-slug">{a.slug}</span>
+          <span class="gm-quiet">sends {a.ports.out}</span>
+        </Link>
+        <span aria-hidden="true">feeds</span>
+        <span class="gm-sr">feeds</span>
+        <Link href={`/m/${b.slug}`} class="gm-chiplink">
+          <span class="gm-slug">{b.slug}</span>
+          <span class="gm-quiet">takes {b.ports.in}</span>
+        </Link>
       </p>
       <ConnBadge eff={e} />
       <WaitText e={e} />
-      {e.adapter && <p>{a.slug} sends {a.ports.out} but {b.slug} takes {b.ports.in}. Plan an adapter between them.</p>}
-      {may && e.state === 'ready' && <Button variant="primary" icon="player-play" onClick={() => setConnState(c.id, 2)}>Start connecting</Button>}
-      {may && e.state === 'progress' && <Button variant="primary" icon="check" onClick={() => setConnState(c.id, 3)}>Mark connected</Button>}
-      {may && (e.state === 'connected' || e.state === 'progress') && <Button icon="refresh" onClick={() => setConnState(c.id, 1)}>Reopen</Button>}
-      {!may && canPost.value && <p class="gm-quiet">The leaders of <span class="gm-slug">{a.slug}</span> and <span class="gm-slug">{b.slug}</span> move this connection along.</p>}
-      {admin && <Button variant="danger" icon="trash" onClick={() => softDelete('connection', c.id)}>Remove connection</Button>}
+      {e.adapter && (
+        <p>
+          {a.slug} sends {a.ports.out} but {b.slug} takes {b.ports.in}. Plan an adapter between them.
+        </p>
+      )}
+      {may && e.state === 'ready' && (
+        <Button variant="primary" icon="player-play" onClick={() => setConnState(c.id, 2)}>
+          Start connecting
+        </Button>
+      )}
+      {may && e.state === 'progress' && (
+        <Button variant="primary" icon="check" onClick={() => setConnState(c.id, 3)}>
+          Mark connected
+        </Button>
+      )}
+      {may && (e.state === 'connected' || e.state === 'progress') && (
+        <Button icon="refresh" onClick={() => setConnState(c.id, 1)}>
+          Reopen
+        </Button>
+      )}
+      {!may && canPost.value && (
+        <p class="gm-quiet">
+          The leaders of <span class="gm-slug">{a.slug}</span> and <span class="gm-slug">{b.slug}</span> move this connection along.
+        </p>
+      )}
+      {admin && (
+        <Button variant="danger" icon="trash" onClick={() => softDelete('connection', c.id)}>
+          Remove connection
+        </Button>
+      )}
     </section>
   );
 }
@@ -135,35 +233,95 @@ function PairForm({ initial, onCancel, onDone }: { initial: { a: string; b: stri
   const [a, setA] = useState(initial?.a ?? '');
   const [b, setB] = useState(initial?.b ?? '');
   const autoSlug = (x: string, y: string) => {
-    const ma = byId.value.get(x), mb = byId.value.get(y);
+    const ma = byId.value.get(x),
+      mb = byId.value.get(y);
     return ma && mb ? uniqueSlug(`${suggestSlug(ma.slug, 1)}-${suggestSlug(mb.slug.split('-').pop()!, 1)}`, slugTaken) : '';
   };
   const [slug, setSlug] = useState(initial ? autoSlug(initial.a, initial.b) : '');
   const [dirty, setDirty] = useState(false);
-  useEffect(() => { if (initial) { setA(initial.a); setB(initial.b); if (!dirty) setSlug(autoSlug(initial.a, initial.b)); } }, [initial?.a, initial?.b]);
-  useEffect(() => { if (!dirty && a && b) setSlug(autoSlug(a, b)); }, [a, b]);
+  useEffect(() => {
+    if (initial) {
+      setA(initial.a);
+      setB(initial.b);
+      if (!dirty) setSlug(autoSlug(initial.a, initial.b));
+    }
+  }, [initial?.a, initial?.b]);
+  useEffect(() => {
+    if (!dirty && a && b) setSlug(autoSlug(a, b));
+  }, [a, b]);
   const exists = a && b && connections.value.some((c) => c.id === pairId(a, b));
-  const err = !a || !b ? 'Pick both modules.' : a === b ? 'A module cannot feed itself.' : exists ? 'These two are already linked in this direction.' : slugError(slug, slugTaken);
+  const err =
+    !a || !b
+      ? 'Pick both modules.'
+      : a === b
+        ? 'A module cannot feed itself.'
+        : exists
+          ? 'These two are already linked in this direction.'
+          : slugError(slug, slugTaken);
   return (
-    <form class="gm-pairform" onSubmit={(e) => { e.preventDefault(); if (!err) { createConnection(a, b, slug); onDone(slug); } }}
-      onKeyDown={(e) => { if (e.key === 'Escape') { e.stopPropagation(); onCancel(); } }}>
-      <label class="gm-label">From (A)
+    <form
+      class="gm-pairform"
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (!err) {
+          createConnection(a, b, slug);
+          onDone(slug);
+        }
+      }}
+      onKeyDown={(e) => {
+        if (e.key === 'Escape') {
+          e.stopPropagation();
+          onCancel();
+        }
+      }}
+    >
+      <label class="gm-label">
+        From (A)
         <select class="gm-input gm-mono gm-select" value={a} onChange={(e) => setA(e.currentTarget.value)}>
-          <option value="">Choose</option>{ms.map((m) => <option key={m.id} value={m.id}>{m.slug}</option>)}
+          <option value="">Choose</option>
+          {ms.map((m) => (
+            <option key={m.id} value={m.id}>
+              {m.slug}
+            </option>
+          ))}
         </select>
       </label>
-      <label class="gm-label">Feeds (B)
+      <label class="gm-label">
+        Feeds (B)
         <select class="gm-input gm-mono gm-select" value={b} onChange={(e) => setB(e.currentTarget.value)}>
-          <option value="">Choose</option>{ms.map((m) => <option key={m.id} value={m.id}>{m.slug}</option>)}
+          <option value="">Choose</option>
+          {ms.map((m) => (
+            <option key={m.id} value={m.id}>
+              {m.slug}
+            </option>
+          ))}
         </select>
       </label>
-      <label class="gm-label">Name
-        <input class="gm-input gm-mono" value={slug} maxLength={SLUG_MAX} placeholder="ramp-feed" onInput={(e) => { setDirty(true); setSlug(e.currentTarget.value.toLowerCase().replace(/\s+/g, '-')); }} />
+      <label class="gm-label">
+        Name
+        <input
+          class="gm-input gm-mono"
+          value={slug}
+          maxLength={SLUG_MAX}
+          placeholder="ramp-feed"
+          onInput={(e) => {
+            setDirty(true);
+            setSlug(e.currentTarget.value.toLowerCase().replace(/\s+/g, '-'));
+          }}
+        />
       </label>
-      <span class="gm-counter">{slug.length} of {SLUG_MAX}</span>
-      <Button type="submit" variant="primary" disabled={!!err}>Create connection</Button>
-      <Button variant="quiet" onClick={onCancel}>Cancel</Button>
-      <p class="gm-quiet" role="status">{a && b ? err ?? 'Ready to create.' : ''}</p>
+      <span class="gm-counter">
+        {slug.length} of {SLUG_MAX}
+      </span>
+      <Button type="submit" variant="primary" disabled={!!err}>
+        Create connection
+      </Button>
+      <Button variant="quiet" onClick={onCancel}>
+        Cancel
+      </Button>
+      <p class="gm-quiet" role="status">
+        {a && b ? (err ?? 'Ready to create.') : ''}
+      </p>
     </form>
   );
 }

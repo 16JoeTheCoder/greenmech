@@ -30,16 +30,37 @@ export function Headline() {
   const unled = ms.filter((m) => !m.leaderUid).length;
   const names = building.slice(0, 4).map((m) => <Slug key={m.id}>{m.slug}</Slug>);
   const parts: (string | preact.JSX.Element)[] = [];
-  names.forEach((n, i) => { parts.push(n); if (i < names.length - 2) parts.push(', '); else if (i === names.length - 2) parts.push(' and '); });
+  names.forEach((n, i) => {
+    parts.push(n);
+    if (i < names.length - 2) parts.push(', ');
+    else if (i === names.length - 2) parts.push(' and ');
+  });
   return (
     <div class="gm-headline">
       <h1 aria-live="polite">
-        {building.length === 0 ? (ms.length ? (done === ms.length ? 'Every module is done.' : 'Nothing is in development right now.') : 'No modules yet.')
-          : <>{parts}{building.length > 4 ? ` and ${building.length - 4} more` : ''} {building.length === 1 ? 'is' : 'are'} in development.</>}
+        {building.length === 0 ? (
+          ms.length ? (
+            done === ms.length ? (
+              'Every module is done.'
+            ) : (
+              'Nothing is in development right now.'
+            )
+          ) : (
+            'No modules yet.'
+          )
+        ) : (
+          <>
+            {parts}
+            {building.length > 4 ? ` and ${building.length - 4} more` : ''} {building.length === 1 ? 'is' : 'are'} in development.
+          </>
+        )}
       </h1>
       {ms.length > 0 && (
         <p class="gm-quiet gm-tally">
-          <span class="gm-done-count" data-done={done}>{done} of {ms.length} done</span>, {flags} open flag{flags === 1 ? '' : 's'}, {unled} without a leader
+          <span class="gm-done-count" data-done={done}>
+            {done} of {ms.length} done
+          </span>
+          , {flags} open flag{flags === 1 ? '' : 's'}, {unled} without a leader
         </p>
       )}
     </div>
@@ -64,7 +85,16 @@ export function ModulesView() {
       <Headline />
       {ms.length === 0 ? (
         <Empty>
-          <p>No modules yet. {uiRole.value === 'admin' ? <>Import the sample structure in <Link href="/manage">Manage, Data</Link>, or add a module.</> : 'Add the first module, or ask the admin to import the sample structure.'}</p>
+          <p>
+            No modules yet.{' '}
+            {uiRole.value === 'admin' ? (
+              <>
+                Import the sample structure in <Link href="/manage">Manage, Data</Link>, or add a module.
+              </>
+            ) : (
+              'Add the first module, or ask the admin to import the sample structure.'
+            )}
+          </p>
           {canEdit.value && <AddModule onDone={() => setAdding(false)} />}
         </Empty>
       ) : (
@@ -77,7 +107,11 @@ export function ModulesView() {
                   {drawing ? 'List' : 'Drawing'}
                 </Button>
               )}
-              {canEdit.value && !adding && <Button icon="plus" onClick={() => setAdding(true)}>Add module</Button>}
+              {canEdit.value && !adding && (
+                <Button icon="plus" onClick={() => setAdding(true)}>
+                  Add module
+                </Button>
+              )}
             </div>
           </div>
           {adding && <AddModule onDone={() => setAdding(false)} />}
@@ -105,7 +139,13 @@ function Legend({ filter, setFilter }: { filter: Status | 'mine' | null; setFilt
   return (
     <div class="gm-legend" role="group" aria-label="Filter by status">
       {STATUS.map((s, i) => (
-        <button key={s.key} type="button" class={`gm-chip gm-legend-${s.key}`} aria-pressed={filter === i} onClick={() => setFilter(filter === i ? null : (i as Status))}>
+        <button
+          key={s.key}
+          type="button"
+          class={`gm-chip gm-legend-${s.key}`}
+          aria-pressed={filter === i}
+          onClick={() => setFilter(filter === i ? null : (i as Status))}
+        >
           <span class={`gm-swatch gm-swatch-${s.key}`} aria-hidden="true" />
           <Icon name={s.icon} />
           {s.word}
@@ -113,7 +153,8 @@ function Legend({ filter, setFilter }: { filter: Status | 'mine' | null; setFilt
       ))}
       {canPost.value && (
         <button type="button" class="gm-chip" aria-pressed={filter === 'mine'} onClick={() => setFilter(filter === 'mine' ? null : 'mine')}>
-          <Icon name="user" />Mine
+          <Icon name="user" />
+          Mine
         </button>
       )}
     </div>
@@ -149,9 +190,29 @@ function ModuleList({ ms, isMatch, onPick }: { ms: Module[]; isMatch?: (m: Modul
 
 export function LeaderControl({ m }: { m: Module }) {
   const uid = user.value!.uid;
-  if (m.leaderUid === uid && canPost.value) return <Button icon="user-minus" onClick={() => stepDown(m.id)}>Step down</Button>;
-  if (!m.leaderUid && canPost.value) return <Button variant="primary" icon="user" onClick={() => takeModule(m.id)}>Take it</Button>;
-  return <span>{m.leaderInitials ? <>Led by <span class="gm-initials">{m.leaderInitials}</span></> : 'No leader yet'}</span>;
+  if (m.leaderUid === uid && canPost.value)
+    return (
+      <Button icon="user-minus" onClick={() => stepDown(m.id)}>
+        Step down
+      </Button>
+    );
+  if (!m.leaderUid && canPost.value)
+    return (
+      <Button variant="primary" icon="user" onClick={() => takeModule(m.id)}>
+        Take it
+      </Button>
+    );
+  return (
+    <span>
+      {m.leaderInitials ? (
+        <>
+          Led by <span class="gm-initials">{m.leaderInitials}</span>
+        </>
+      ) : (
+        'No leader yet'
+      )}
+    </span>
+  );
 }
 
 function ModuleSheet({ m, onClose }: { m: Module; onClose: () => void }) {
@@ -160,15 +221,26 @@ function ModuleSheet({ m, onClose }: { m: Module; onClose: () => void }) {
   const nflags = flagsByModule.value.get(m.id) ?? 0;
   return (
     <Sheet title={<Slug>{m.slug}</Slug>} onClose={onClose}>
-      <Button variant="primary" icon="arrow-right" onClick={() => nav(`/m/${m.slug}`)}>Open full page</Button>
+      <Button variant="primary" icon="arrow-right" onClick={() => nav(`/m/${m.slug}`)}>
+        Open full page
+      </Button>
       <div class="gm-field">
         <span class="gm-label-text">Status</span>
         {leads ? <Stepper value={m.status} onChange={(s) => setStatus(m.id, s)} /> : <StatusBadge status={m.status} />}
         {!leads && canPost.value && <span class="gm-quiet">Only the leader changes status.</span>}
       </div>
-      <div class="gm-field"><span class="gm-label-text">Leader</span><LeaderControl m={m} /></div>
-      <div class="gm-field"><span class="gm-label-text">Purpose</span><p>{m.purpose || <span class="gm-quiet">Not written yet.</span>}</p></div>
-      <div class="gm-field"><span class="gm-label-text">Flags</span><p>{nflags ? `${nflags} open` : 'None open'}</p></div>
+      <div class="gm-field">
+        <span class="gm-label-text">Leader</span>
+        <LeaderControl m={m} />
+      </div>
+      <div class="gm-field">
+        <span class="gm-label-text">Purpose</span>
+        <p>{m.purpose || <span class="gm-quiet">Not written yet.</span>}</p>
+      </div>
+      <div class="gm-field">
+        <span class="gm-label-text">Flags</span>
+        <p>{nflags ? `${nflags} open` : 'None open'}</p>
+      </div>
     </Sheet>
   );
 }
@@ -188,22 +260,54 @@ function AddModule({ onDone }: { onDone: () => void }) {
     void nav;
   };
   return (
-    <form class="gm-addmodule" onSubmit={submit} onKeyDown={(e) => { if (e.key === 'Escape') { e.stopPropagation(); onDone(); } }}>
+    <form
+      class="gm-addmodule"
+      onSubmit={submit}
+      onKeyDown={(e) => {
+        if (e.key === 'Escape') {
+          e.stopPropagation();
+          onDone();
+        }
+      }}
+    >
       <label class="gm-label">
         Name
-        <input class="gm-input gm-mono" autoFocus value={slug} maxLength={SLUG_MAX} placeholder="solar-updraft" aria-invalid={touched && !!err}
+        <input
+          class="gm-input gm-mono"
+          autoFocus
+          value={slug}
+          maxLength={SLUG_MAX}
+          placeholder="solar-updraft"
+          aria-invalid={touched && !!err}
           aria-describedby="gm-add-err gm-add-count"
-          onInput={(e) => setSlug(e.currentTarget.value.toLowerCase().replace(/\s+/g, '-'))} />
+          onInput={(e) => setSlug(e.currentTarget.value.toLowerCase().replace(/\s+/g, '-'))}
+        />
       </label>
-      <span id="gm-add-count" class="gm-counter">{slug.length} of {SLUG_MAX}</span>
+      <span id="gm-add-count" class="gm-counter">
+        {slug.length} of {SLUG_MAX}
+      </span>
       <label class="gm-label gm-grow">
         Purpose, one sentence
-        <input class="gm-input" value={purpose} maxLength={200} placeholder="Hot air turns a fan that pushes the ball on"
-          onInput={(e) => { setPurpose(e.currentTarget.value); if (!slug) setSlug(suggestSlug(e.currentTarget.value)); }} />
+        <input
+          class="gm-input"
+          value={purpose}
+          maxLength={200}
+          placeholder="Hot air turns a fan that pushes the ball on"
+          onInput={(e) => {
+            setPurpose(e.currentTarget.value);
+            if (!slug) setSlug(suggestSlug(e.currentTarget.value));
+          }}
+        />
       </label>
-      <Button type="submit" variant="primary" icon="plus">Add module</Button>
-      <Button variant="quiet" onClick={onDone}>Cancel</Button>
-      <p id="gm-add-err" class="gm-error" role="alert">{touched && err ? err : ''}</p>
+      <Button type="submit" variant="primary" icon="plus">
+        Add module
+      </Button>
+      <Button variant="quiet" onClick={onDone}>
+        Cancel
+      </Button>
+      <p id="gm-add-err" class="gm-error" role="alert">
+        {touched && err ? err : ''}
+      </p>
     </form>
   );
 }
@@ -213,15 +317,43 @@ function AttentionBand() {
   const ms = live.value;
   const rows: preact.JSX.Element[] = [];
   const unled = ms.find((m) => !m.leaderUid && m.tier >= 0) ?? ms.find((m) => !m.leaderUid);
-  if (unled) rows.push(
-    <li key="u"><span><Slug>{unled.slug}</Slug> has no leader.</span>{canPost.value && <Button onClick={() => takeModule(unled.id)} icon="user">Take it</Button>}</li>,
-  );
+  if (unled)
+    rows.push(
+      <li key="u">
+        <span>
+          <Slug>{unled.slug}</Slug> has no leader.
+        </span>
+        {canPost.value && (
+          <Button onClick={() => takeModule(unled.id)} icon="user">
+            Take it
+          </Button>
+        )}
+      </li>,
+    );
   const ready = liveConns.value.find((c) => effective(c, byId.value.get(c.aId), byId.value.get(c.bId)).state === 'ready');
-  if (ready) rows.push(<li key="r"><span><Slug>{ready.slug}</Slug> is ready to connect.</span><Button icon="player-play" onClick={() => nav(`/c/${ready.slug}`)}>Open</Button></li>);
+  if (ready)
+    rows.push(
+      <li key="r">
+        <span>
+          <Slug>{ready.slug}</Slug> is ready to connect.
+        </span>
+        <Button icon="player-play" onClick={() => nav(`/c/${ready.slug}`)}>
+          Open
+        </Button>
+      </li>,
+    );
   const flagged = [...flagsByModule.value.entries()].map(([id, n]) => ({ m: byId.value.get(id), n })).find((x) => x.m && !x.m.deletedAt);
-  if (flagged?.m) rows.push(
-    <li key="f"><span><Slug>{flagged.m.slug}</Slug> has {flagged.n} open flag{flagged.n > 1 ? 's' : ''}.</span><Button icon="flag" onClick={() => nav(`/m/${flagged.m!.slug}#discussion`)}>Review</Button></li>,
-  );
+  if (flagged?.m)
+    rows.push(
+      <li key="f">
+        <span>
+          <Slug>{flagged.m.slug}</Slug> has {flagged.n} open flag{flagged.n > 1 ? 's' : ''}.
+        </span>
+        <Button icon="flag" onClick={() => nav(`/m/${flagged.m!.slug}#discussion`)}>
+          Review
+        </Button>
+      </li>,
+    );
   if (!rows.length) return null;
   return (
     <section class="gm-band" aria-label="Needs attention">

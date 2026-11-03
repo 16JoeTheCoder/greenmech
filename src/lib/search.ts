@@ -1,14 +1,22 @@
 import type { Connection, Module } from './types';
-export interface Hit { kind: 'module' | 'connection'; id: string; slug: string; score: number }
+export interface Hit {
+  kind: 'module' | 'connection';
+  id: string;
+  slug: string;
+  score: number;
+}
 
 /** Subsequence fuzzy score: 0 means no match; contiguous and prefix matches score higher. */
 export function fuzzy(q: string, text: string): number {
-  q = q.toLowerCase(); text = text.toLowerCase();
+  q = q.toLowerCase();
+  text = text.toLowerCase();
   if (!q) return 0;
   const idx = text.indexOf(q);
   if (idx === 0) return 100 - text.length * 0.1;
   if (idx > 0) return 70 - idx * 0.5;
-  let ti = 0, run = 0, score = 0;
+  let ti = 0,
+    run = 0,
+    score = 0;
   for (const ch of q) {
     const f = text.indexOf(ch, ti);
     if (f < 0) return 0;
@@ -27,7 +35,10 @@ export function search(q: string, modules: Module[], conns: Connection[], limit 
   for (const m of modules) {
     const s = Math.max(
       fuzzy(q, m.slug),
-      ...m.purpose.toLowerCase().split(/\s+/).map((w) => fuzzy(q, w) * 0.6),
+      ...m.purpose
+        .toLowerCase()
+        .split(/\s+/)
+        .map((w) => fuzzy(q, w) * 0.6),
       m.leaderInitials && m.leaderInitials.toLowerCase() === q.toLowerCase() ? 60 : 0,
     );
     if (s > 0) hits.push({ kind: 'module', id: m.id, slug: m.slug, score: s });

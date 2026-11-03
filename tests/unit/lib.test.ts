@@ -10,11 +10,34 @@ import { joinNames } from '../../src/lib/status';
 import type { Connection, Module } from '../../src/lib/types';
 
 const mod = (id: string, slug: string, status: 0 | 1 | 2 | 3, o: Partial<Module> = {}): Module => ({
-  id, slug, status, tier: 0, order: 0, purpose: '', hasModel: false, ports: { in: 'none', out: 'none' },
-  leaderUid: null, leaderInitials: null, createdAt: null, createdBy: '', updatedAt: null, updatedBy: '', deletedAt: null, ...o,
+  id,
+  slug,
+  status,
+  tier: 0,
+  order: 0,
+  purpose: '',
+  hasModel: false,
+  ports: { in: 'none', out: 'none' },
+  leaderUid: null,
+  leaderInitials: null,
+  createdAt: null,
+  createdBy: '',
+  updatedAt: null,
+  updatedBy: '',
+  deletedAt: null,
+  ...o,
 });
 const conn = (aId: string, bId: string, state: 1 | 2 | 3): Connection => ({
-  id: `${aId}__${bId}`, slug: 'x-y', aId, bId, state, createdAt: null, createdBy: '', updatedAt: null, updatedBy: '', deletedAt: null,
+  id: `${aId}__${bId}`,
+  slug: 'x-y',
+  aId,
+  bId,
+  state,
+  createdAt: null,
+  createdBy: '',
+  updatedAt: null,
+  updatedBy: '',
+  deletedAt: null,
 });
 
 describe('slug', () => {
@@ -53,8 +76,14 @@ describe('markdown subset', () => {
     expect(b.map((x) => x.t)).toEqual(['h', 'p', 'ul', 'ol']);
   });
   const payloads = [
-    '<script>alert(1)</script>', '<img src=x onerror=alert(1)>', '[x](javascript:alert(1))', '[x](data:text/html,hi)',
-    '[x](http://insecure.example)', '<a href="https://x">y</a>', '[x](JaVaScRiPt:alert(1))', '"><svg onload=alert(1)>',
+    '<script>alert(1)</script>',
+    '<img src=x onerror=alert(1)>',
+    '[x](javascript:alert(1))',
+    '[x](data:text/html,hi)',
+    '[x](http://insecure.example)',
+    '<a href="https://x">y</a>',
+    '[x](JaVaScRiPt:alert(1))',
+    '"><svg onload=alert(1)>',
   ];
   it.each(payloads)('never produces a non-https link or raw HTML node: %s', (p) => {
     const json = JSON.stringify(parseMarkdown(p));
@@ -105,7 +134,14 @@ describe('search', () => {
     expect(search('lift', ms, [])[0].slug).toBe('lift-arm');
     expect(search('ball', ms, [])[0].slug).toBe('intake-ramp');
     expect(search('p1', ms, [])[0].slug).toBe('intake-ramp');
-    expect(search('intake', [], [conn('1', '2', 1)].map((c) => c), 8).length).toBe(0);
+    expect(
+      search(
+        'intake',
+        [],
+        [conn('1', '2', 1)].map((c) => c),
+        8,
+      ).length,
+    ).toBe(0);
     expect(search('intake', ms, [{ ...conn('1', '2', 1), slug: 'ramp-feed' }]).some((h) => h.kind === 'connection')).toBe(true);
   });
   it('empty query returns nothing', () => expect(search('  ', ms, [])).toEqual([]));

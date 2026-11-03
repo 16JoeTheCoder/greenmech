@@ -1,6 +1,8 @@
 // Transparent proxy for Firebase Auth's helper pages, so authDomain can be the app's own host.
 // Only /__/auth/* is proxied. Responses (including 302s) are returned unchanged.
-interface Env { FIREBASE_PROJECT_ID: string }
+interface Env {
+  FIREBASE_PROJECT_ID: string;
+}
 const DROP = new Set(['host', 'cookie', 'cf-connecting-ip', 'cf-ipcountry', 'cf-ray', 'cf-visitor', 'x-forwarded-for', 'x-real-ip']);
 
 export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
@@ -21,8 +23,11 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
       redirect: 'manual',
       signal: ctrl.signal,
     });
-  } catch {
-    return new Response('Sign-in helper did not answer in time. Try again.', { status: 504 });
+  } catch (e) {
+    const timedOut = (e as Error).name === 'AbortError';
+    return new Response(timedOut ? 'Sign-in helper did not answer in time. Try again.' : 'Could not reach the sign-in helper. Try again.', {
+      status: timedOut ? 504 : 502,
+    });
   } finally {
     clearTimeout(timer);
   }

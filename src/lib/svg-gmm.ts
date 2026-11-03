@@ -1,10 +1,66 @@
 // Safe-SVG allowlist validation (generic) and GMM v1 structure checks. Never fixes a file: rejects with a reason.
-export const ALLOWED_EL = new Set(['svg', 'g', 'path', 'rect', 'circle', 'ellipse', 'line', 'polyline', 'polygon', 'text', 'tspan', 'defs', 'title', 'desc', 'metadata']);
+export const ALLOWED_EL = new Set([
+  'svg',
+  'g',
+  'path',
+  'rect',
+  'circle',
+  'ellipse',
+  'line',
+  'polyline',
+  'polygon',
+  'text',
+  'tspan',
+  'defs',
+  'title',
+  'desc',
+  'metadata',
+]);
 const ALLOWED_ATTR = new Set([
-  'id', 'class', 'viewBox', 'width', 'height', 'x', 'y', 'x1', 'y1', 'x2', 'y2', 'cx', 'cy', 'r', 'rx', 'ry', 'd', 'points',
-  'fill', 'stroke', 'stroke-width', 'stroke-dasharray', 'stroke-linecap', 'stroke-linejoin', 'stroke-opacity', 'fill-opacity',
-  'opacity', 'transform', 'font-size', 'font-family', 'font-weight', 'text-anchor', 'dominant-baseline', 'xmlns', 'version',
-  'data-kind', 'data-carries', 'preserveAspectRatio', 'vector-effect', 'fill-rule', 'clip-rule', 'dx', 'dy', 'style',
+  'id',
+  'class',
+  'viewBox',
+  'width',
+  'height',
+  'x',
+  'y',
+  'x1',
+  'y1',
+  'x2',
+  'y2',
+  'cx',
+  'cy',
+  'r',
+  'rx',
+  'ry',
+  'd',
+  'points',
+  'fill',
+  'stroke',
+  'stroke-width',
+  'stroke-dasharray',
+  'stroke-linecap',
+  'stroke-linejoin',
+  'stroke-opacity',
+  'fill-opacity',
+  'opacity',
+  'transform',
+  'font-size',
+  'font-family',
+  'font-weight',
+  'text-anchor',
+  'dominant-baseline',
+  'xmlns',
+  'version',
+  'data-kind',
+  'data-carries',
+  'preserveAspectRatio',
+  'vector-effect',
+  'fill-rule',
+  'clip-rule',
+  'dx',
+  'dy',
+  'style',
 ]);
 export type Result = { ok: true; doc: Document } | { ok: false; error: string };
 
@@ -35,7 +91,8 @@ export function validateGmm(text: string): Result {
   const r = validateSafeSvg(text, 40000);
   if (!r.ok) return r;
   const root = r.doc.documentElement;
-  if (root.getAttribute('viewBox')?.trim().replace(/\s+/g, ' ') !== '0 0 400 300') return { ok: false, error: 'GMM v1 needs viewBox="0 0 400 300" on the root <svg>.' };
+  if (root.getAttribute('viewBox')?.trim().replace(/\s+/g, ' ') !== '0 0 400 300')
+    return { ok: false, error: 'GMM v1 needs viewBox="0 0 400 300" on the root <svg>.' };
   const byId = (id: string) => Array.from(r.doc.getElementsByTagName('*')).find((e) => e.getAttribute('id') === id);
   for (const id of ['envelope', 'parts', 'ports', 'labels']) {
     const g = byId(id);

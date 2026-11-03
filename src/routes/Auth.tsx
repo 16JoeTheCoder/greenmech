@@ -5,18 +5,33 @@ import { user, signIn, signOut, authError, signInFixture } from '../state/sessio
 import { Button } from '../components/ui';
 
 export function SignIn() {
-  useEffect(() => { document.title = 'Sign in · Greenmech'; }, []);
+  useEffect(() => {
+    document.title = 'Sign in · Greenmech';
+  }, []);
   const [email, setEmail] = useState('member1@test.example');
   return (
     <main id="main" class="gm-auth">
       <h1>Greenmech</h1>
       <p class="gm-lede">The team's plan for the chain-reaction machine: who builds which module, what is done, and which modules are ready to join.</p>
-      <Button variant="primary" onClick={() => signIn()}>Sign in with Google</Button>
-      {authError.value && <p class="gm-error" role="alert">{authError.value}</p>}
+      <Button variant="primary" onClick={() => signIn()}>
+        Sign in with Google
+      </Button>
+      {authError.value && (
+        <p class="gm-error" role="alert">
+          {authError.value}
+        </p>
+      )}
       <p class="gm-quiet">Only accounts on the team list can open the app. Sign in, and if you are not on the list yet you can ask to join.</p>
       {USE_EMU && (
-        <form class="gm-addline" onSubmit={(e) => { e.preventDefault(); signInFixture(email); }}>
-          <label class="gm-label">Emulator fixture email
+        <form
+          class="gm-addline"
+          onSubmit={(e) => {
+            e.preventDefault();
+            signInFixture(email);
+          }}
+        >
+          <label class="gm-label">
+            Emulator fixture email
             <input class="gm-input" name="fixture" value={email} onInput={(e) => setEmail(e.currentTarget.value)} />
           </label>
           <Button type="submit">Sign in as fixture</Button>
@@ -33,7 +48,9 @@ export function Access() {
   const [err, setErr] = useState('');
   useEffect(() => {
     document.title = 'Not on the team list · Greenmech';
-    getDoc(doc(db, 'accessRequests', u.uid)).then((s) => s.exists() && setSent('yes')).catch(() => {});
+    getDoc(doc(db, 'accessRequests', u.uid))
+      .then((s) => s.exists() && setSent('yes'))
+      .catch(() => {});
   }, []);
   const send = async (e: Event) => {
     e.preventDefault();
@@ -55,14 +72,23 @@ export function Access() {
         <p role="status">Request sent. The admin will add you; reload this page after they tell you.</p>
       ) : (
         <form onSubmit={send} class="gm-addline">
-          <label class="gm-label">Your name, as the team knows you
+          <label class="gm-label">
+            Your name, as the team knows you
             <input class="gm-input" required maxLength={60} value={name} placeholder="Ayu" onInput={(e) => setName(e.currentTarget.value)} />
           </label>
-          <Button type="submit" variant="primary" disabled={sent === 'sending'}>Ask to join</Button>
+          <Button type="submit" variant="primary" disabled={sent === 'sending'}>
+            Ask to join
+          </Button>
         </form>
       )}
-      {err && <p class="gm-error" role="alert">{err}</p>}
-      <Button variant="quiet" icon="logout" onClick={() => signOut()}>Use another account</Button>
+      {err && (
+        <p class="gm-error" role="alert">
+          {err}
+        </p>
+      )}
+      <Button variant="quiet" icon="logout" onClick={() => signOut()}>
+        Use another account
+      </Button>
     </main>
   );
 }

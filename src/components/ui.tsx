@@ -9,8 +9,20 @@ import type { Status } from '../lib/types';
 export function Icon({ name, label }: { name: string; label?: string }) {
   const parts = ICONS[name] ?? [];
   return (
-    <svg class="gm-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75"
-      stroke-linecap="round" stroke-linejoin="round" aria-hidden={label ? undefined : 'true'} role={label ? 'img' : undefined} aria-label={label}>
+    <svg
+      class="gm-icon"
+      viewBox="0 0 24 24"
+      width="20"
+      height="20"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.75"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      aria-hidden={label ? undefined : 'true'}
+      role={label ? 'img' : undefined}
+      aria-label={label}
+    >
       {parts.map((p, i) => {
         const Tag = p.tag as 'path';
         return <Tag key={i} {...(p.a as Record<string, string>)} />;
@@ -65,8 +77,15 @@ export function Stepper({ value, onChange, disabled }: { value: Status; onChange
   return (
     <div class="gm-stepper" role="radiogroup" aria-label="Status">
       {STATUS.map((s, i) => (
-        <button key={s.key} type="button" role="radio" aria-checked={value === i} disabled={disabled}
-          class={`gm-step ${value === i ? 'gm-step-on' : ''}`} onClick={() => onChange(i as Status)}>
+        <button
+          key={s.key}
+          type="button"
+          role="radio"
+          aria-checked={value === i}
+          disabled={disabled}
+          class={`gm-step ${value === i ? 'gm-step-on' : ''}`}
+          onClick={() => onChange(i as Status)}
+        >
           <Icon name={s.icon} />
           {s.word}
         </button>
@@ -91,18 +110,31 @@ export function AddLine({ label, placeholder, max, onAdd }: { label: string; pla
         {label}
         <input class="gm-input" value={v} maxLength={max} placeholder={placeholder} onInput={(e) => setV(e.currentTarget.value)} />
       </label>
-      <Button type="submit" icon="plus">Add</Button>
-      {v.length > max * 0.8 && <span class="gm-counter">{v.length} of {max}</span>}
+      <Button type="submit" icon="plus">
+        Add
+      </Button>
+      {v.length > max * 0.8 && (
+        <span class="gm-counter">
+          {v.length} of {max}
+        </span>
+      )}
     </form>
   );
 }
 
 function renderInline(c: Inline[]): ComponentChildren {
   return c.map((n, i) =>
-    n.t === 'text' ? n.v
-      : n.t === 'b' ? <strong key={i}>{renderInline(n.c)}</strong>
-        : n.t === 'i' ? <em key={i}>{renderInline(n.c)}</em>
-          : <a key={i} href={n.href} rel="noopener noreferrer" target="_blank">{renderInline(n.c)}</a>,
+    n.t === 'text' ? (
+      n.v
+    ) : n.t === 'b' ? (
+      <strong key={i}>{renderInline(n.c)}</strong>
+    ) : n.t === 'i' ? (
+      <em key={i}>{renderInline(n.c)}</em>
+    ) : (
+      <a key={i} href={n.href} rel="noopener noreferrer" target="_blank">
+        {renderInline(n.c)}
+      </a>
+    ),
   );
 }
 export function Markdown({ blocks }: { blocks: Block[] }) {
@@ -110,9 +142,18 @@ export function Markdown({ blocks }: { blocks: Block[] }) {
     <div class="gm-prose">
       {blocks.map((b, i) => {
         if (b.t === 'p') return <p key={i}>{renderInline(b.c)}</p>;
-        if (b.t === 'h') { const H = `h${b.level + 1}` as 'h3'; return <H key={i}>{renderInline(b.c)}</H>; }
+        if (b.t === 'h') {
+          const H = `h${b.level + 1}` as 'h3';
+          return <H key={i}>{renderInline(b.c)}</H>;
+        }
         const L = b.t;
-        return <L key={i}>{b.items.map((it, j) => <li key={j}>{renderInline(it)}</li>)}</L>;
+        return (
+          <L key={i}>
+            {b.items.map((it, j) => (
+              <li key={j}>{renderInline(it)}</li>
+            ))}
+          </L>
+        );
       })}
     </div>
   );
@@ -126,7 +167,14 @@ export function VectorView({ svg, label, class: cls }: { svg: string; label: str
     setUrl(u);
     return () => URL.revokeObjectURL(u);
   }, [svg]);
-  return <div class={`gm-vector ${cls ?? ''}`} role="img" aria-label={label} style={url ? { maskImage: `url("${url}")`, WebkitMaskImage: `url("${url}")` } : undefined} />;
+  return (
+    <div
+      class={`gm-vector ${cls ?? ''}`}
+      role="img"
+      aria-label={label}
+      style={url ? { maskImage: `url("${url}")`, WebkitMaskImage: `url("${url}")` } : undefined}
+    />
+  );
 }
 
 export function Sheet({ title, onClose, children }: { title: ComponentChildren; onClose: () => void; children: ComponentChildren }) {

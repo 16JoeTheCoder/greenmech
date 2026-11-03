@@ -12,7 +12,8 @@ export const UNDO_MS = 10000;
 const eq = (a: unknown, b: unknown): boolean => {
   if (a === b) return true;
   if (a && b && typeof a === 'object' && typeof b === 'object') {
-    const ka = Object.keys(a as object), kb = Object.keys(b as object);
+    const ka = Object.keys(a as object),
+      kb = Object.keys(b as object);
     return ka.length === kb.length && ka.every((k) => eq((a as Record<string, unknown>)[k], (b as Record<string, unknown>)[k]));
   }
   return false;

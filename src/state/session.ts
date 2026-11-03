@@ -51,7 +51,11 @@ export function startSession() {
   getRedirectResult(auth).catch((e) => (authError.value = signInMessage(e)));
   onAuthStateChanged(auth, async (u) => {
     if (u) await resolveRole(u);
-    else { realRole.value = 'none'; listed.value = false; initials.value = ''; }
+    else {
+      realRole.value = 'none';
+      listed.value = false;
+      initials.value = '';
+    }
     user.value = u;
   });
 }
@@ -91,10 +95,18 @@ export const signOut = () => fbSignOut(auth);
 export const theme = signal<'system' | 'light' | 'dark'>(readLocal('gm-theme', 'system') as 'system');
 export const shortcuts = signal<boolean>(readLocal('gm-shortcuts', '1') === '1');
 function readLocal(k: string, d: string) {
-  try { return localStorage.getItem(k) ?? d; } catch { return d; }
+  try {
+    return localStorage.getItem(k) ?? d;
+  } catch {
+    return d;
+  }
 }
 function writeLocal(k: string, v: string) {
-  try { localStorage.setItem(k, v); } catch { /* storage blocked: preference lasts this visit */ }
+  try {
+    localStorage.setItem(k, v);
+  } catch {
+    /* storage blocked: preference lasts this visit */
+  }
 }
 export function applyTheme(t: 'system' | 'light' | 'dark') {
   theme.value = t;
@@ -121,7 +133,12 @@ export async function loadProfile() {
     if (s.exists()) {
       const p = s.data() as { theme?: 'system' | 'light' | 'dark'; shortcuts?: boolean };
       if (p.theme && p.theme !== theme.value) applyTheme(p.theme);
-      if (typeof p.shortcuts === 'boolean') { shortcuts.value = p.shortcuts; writeLocal('gm-shortcuts', p.shortcuts ? '1' : '0'); }
+      if (typeof p.shortcuts === 'boolean') {
+        shortcuts.value = p.shortcuts;
+        writeLocal('gm-shortcuts', p.shortcuts ? '1' : '0');
+      }
     }
-  } catch { /* offline: keep local */ }
+  } catch {
+    /* offline: keep local */
+  }
 }

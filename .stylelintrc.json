@@ -1,0 +1,21 @@
+{
+  "extends": ["stylelint-config-standard"],
+  "rules": {
+    "selector-class-pattern": ["^gm-[a-z0-9-]+$", { "message": "Prefix every class with gm- (prototype .ti collision, BUILD_PROMPT 11.1)" }],
+    "color-no-hex": true,
+    "keyframes-name-pattern": null,
+    "custom-property-pattern": null,
+    "no-descending-specificity": null,
+    "selector-id-pattern": null,
+    "media-feature-range-notation": "context",
+    "declaration-empty-line-before": null,
+    "rule-empty-line-before": null,
+    "comment-empty-line-before": null,
+    "font-family-name-quotes": null,
+    "value-keyword-case": null,
+    "selector-not-notation": null,
+    "property-no-vendor-prefix": null,
+    "no-duplicate-selectors": null
+  },
+  "overrides": [{ "files": ["src/styles/tokens.css"], "rules": { "color-no-hex": null, "color-hex-length": null } }]
+}

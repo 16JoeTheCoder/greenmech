@@ -21,8 +21,15 @@ export const helpOpen = { set: (_: boolean) => {} };
 export function App() {
   const u = user.value;
   const [loc, nav] = useLocation();
-  useEffect(() => { if (u && uiRole.value !== 'none') loadProfile(); }, [u]);
-  if (u === undefined) return <div class="gm-boot" role="status">Loading Greenmech</div>;
+  useEffect(() => {
+    if (u && uiRole.value !== 'none') loadProfile();
+  }, [u]);
+  if (u === undefined)
+    return (
+      <div class="gm-boot" role="status">
+        Loading Greenmech
+      </div>
+    );
   if (!u) return loc === '/signin' ? <SignIn /> : <Redirect to="/signin" nav={nav} />;
   if (uiRole.value === 'none' && !isAdmin.value) return <Access />;
   return <Shell />;
@@ -44,15 +51,21 @@ function Shell() {
   useGlobalKeys(setHelp);
   return (
     <>
-      <a class="gm-skip" href="#main">Skip to content</a>
+      <a class="gm-skip" href="#main">
+        Skip to content
+      </a>
       {preview.value && (
         <div class="gm-preview" role="status">
           Previewing as {preview.value}. Your real permissions are unchanged.
-          <Button variant="quiet" onClick={() => (preview.value = null)}>Stop preview</Button>
+          <Button variant="quiet" onClick={() => (preview.value = null)}>
+            Stop preview
+          </Button>
         </div>
       )}
       <header class="gm-header">
-        <Link href={role === 'coach' ? '/monitor' : '/'} class="gm-brand">Greenmech</Link>
+        <Link href={role === 'coach' ? '/monitor' : '/'} class="gm-brand">
+          Greenmech
+        </Link>
         <nav aria-label="Main" class="gm-nav">
           {role !== 'coach' && <NavLink href="/">Modules</NavLink>}
           <NavLink href="/connections">Connections</NavLink>
@@ -65,18 +78,34 @@ function Shell() {
       </header>
       <main id="main" tabIndex={-1}>
         {!loaded.value ? (
-          <p class="gm-boot" role="status">Loading modules</p>
+          <p class="gm-boot" role="status">
+            Loading modules
+          </p>
         ) : (
-          <Suspense fallback={<p class="gm-boot" role="status">Loading</p>}>
+          <Suspense
+            fallback={
+              <p class="gm-boot" role="status">
+                Loading
+              </p>
+            }
+          >
             <Switch>
               <Route path="/">{role === 'coach' ? <Monitor /> : <ModulesView />}</Route>
               <Route path="/m/:slug">{(p) => <ModulePage slug={p.slug} />}</Route>
-              <Route path="/connections"><ConnectionsView /></Route>
+              <Route path="/connections">
+                <ConnectionsView />
+              </Route>
               <Route path="/c/:slug">{(p) => <ConnectionsView slug={p.slug} />}</Route>
-              <Route path="/monitor"><Monitor /></Route>
+              <Route path="/monitor">
+                <Monitor />
+              </Route>
               <Route path="/manage">{isAdmin.value ? <Manage /> : <NotFound what="page" />}</Route>
-              <Route path="/help"><Help /></Route>
-              <Route><NotFound what="page" /></Route>
+              <Route path="/help">
+                <Help />
+              </Route>
+              <Route>
+                <NotFound what="page" />
+              </Route>
             </Switch>
           </Suspense>
         )}
@@ -90,7 +119,11 @@ function Shell() {
 function NavLink({ href, children }: { href: string; children: string }) {
   const [loc] = useLocation();
   const on = href === '/' ? loc === '/' || loc.startsWith('/m/') : loc.startsWith(href) || (href === '/connections' && loc.startsWith('/c/'));
-  return <Link href={href} class={`gm-navlink ${on ? 'gm-navlink-on' : ''}`} aria-current={on ? 'page' : undefined}>{children}</Link>;
+  return (
+    <Link href={href} class={`gm-navlink ${on ? 'gm-navlink-on' : ''}`} aria-current={on ? 'page' : undefined}>
+      {children}
+    </Link>
+  );
 }
 
 export function NotFound({ what }: { what: string }) {
@@ -98,14 +131,20 @@ export function NotFound({ what }: { what: string }) {
   return (
     <div class="gm-page gm-narrow">
       <h1>That {what} does not exist</h1>
-      <p>It may have been renamed or removed. Search for it by name with the box at the top, or press <kbd>/</kbd>.</p>
-      <p><Link href="/">Go to modules</Link></p>
+      <p>
+        It may have been renamed or removed. Search for it by name with the box at the top, or press <kbd>/</kbd>.
+      </p>
+      <p>
+        <Link href="/">Go to modules</Link>
+      </p>
     </div>
   );
 }
 
 export function useTitle(t: string) {
-  useEffect(() => { document.title = `${t} · Greenmech`; }, [t]);
+  useEffect(() => {
+    document.title = `${t} · Greenmech`;
+  }, [t]);
 }
 
 // ---------- search ----------
@@ -116,31 +155,71 @@ function JumpSearch() {
   const input = useRef<HTMLInputElement>(null);
   const hits: Hit[] = search(q, live.value, liveConns.value);
   const byId = new Map(live.value.map((m) => [m.id, m]));
-  const open = (h: Hit) => { nav(h.kind === 'module' ? `/m/${h.slug}` : `/c/${h.slug}`); setQ(''); input.current?.blur(); };
+  const open = (h: Hit) => {
+    nav(h.kind === 'module' ? `/m/${h.slug}` : `/c/${h.slug}`);
+    setQ('');
+    input.current?.blur();
+  };
   useEffect(() => setI(0), [q]);
   return (
     <div class="gm-search" role="search">
-      <label class="gm-sr" for="gm-search">Jump to a module or connection</label>
+      <label class="gm-sr" for="gm-search">
+        Jump to a module or connection
+      </label>
       <Icon name="search" />
-      <input id="gm-search" ref={input} class="gm-input gm-search-input" type="text" placeholder="Search, like lift-arm" enterKeyHint="go" value={q}
-        autoComplete="off" role="combobox" aria-expanded={hits.length > 0} aria-controls="gm-search-list"
+      <input
+        id="gm-search"
+        ref={input}
+        class="gm-input gm-search-input"
+        type="text"
+        placeholder="Search, like lift-arm"
+        enterKeyHint="go"
+        value={q}
+        autoComplete="off"
+        role="combobox"
+        aria-expanded={hits.length > 0}
+        aria-controls="gm-search-list"
         aria-activedescendant={hits[i] ? `gm-hit-${i}` : undefined}
         onInput={(e) => setQ(e.currentTarget.value)}
         onKeyDown={(e) => {
-          if (e.key === 'ArrowDown') { e.preventDefault(); setI((x) => Math.min(x + 1, hits.length - 1)); }
-          else if (e.key === 'ArrowUp') { e.preventDefault(); setI((x) => Math.max(x - 1, 0)); }
-          else if (e.key === 'Enter' && hits[i]) { e.preventDefault(); open(hits[i]); }
-          else if (e.key === 'Escape' && q) { e.preventDefault(); e.stopPropagation(); setQ(''); }
-        }} />
+          if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            setI((x) => Math.min(x + 1, hits.length - 1));
+          } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            setI((x) => Math.max(x - 1, 0));
+          } else if (e.key === 'Enter' && hits[i]) {
+            e.preventDefault();
+            open(hits[i]);
+          } else if (e.key === 'Escape' && q) {
+            e.preventDefault();
+            e.stopPropagation();
+            setQ('');
+          }
+        }}
+      />
       {q.trim() && (
         <ul id="gm-search-list" class="gm-search-list" role="listbox" aria-label="Results">
-          {hits.length === 0 && <li class="gm-search-none" role="option" aria-selected="false">Nothing matches "{q}".</li>}
+          {hits.length === 0 && (
+            <li class="gm-search-none" role="option" aria-selected="false">
+              Nothing matches "{q}".
+            </li>
+          )}
           {hits.map((h, n) => {
             const m = h.kind === 'module' ? byId.get(h.id) : undefined;
             const c = h.kind === 'connection' ? liveConns.value.find((x) => x.id === h.id) : undefined;
             return (
-              <li key={h.id} id={`gm-hit-${n}`} role="option" aria-selected={n === i} class={n === i ? 'gm-hit-on' : ''}
-                onMouseDown={(e) => { e.preventDefault(); open(h); }}>
+              <li
+                key={h.id}
+                id={`gm-hit-${n}`}
+                role="option"
+                aria-selected={n === i}
+                class={n === i ? 'gm-hit-on' : ''}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  open(h);
+                }}
+              >
                 <span class="gm-slug">{h.slug}</span>
                 <span class="gm-quiet">
                   {m ? `${STATUS[m.status].word} · ${m.leaderInitials ?? 'no leader'}` : `Connection · ${byId.get(c!.aId)?.slug} to ${byId.get(c!.bId)?.slug}`}
@@ -156,7 +235,14 @@ function JumpSearch() {
 
 function SyncIndicator() {
   const s = sync.value;
-  const text = s === 'offline' ? (inflight.value ? `Offline, ${inflight.value} change${inflight.value > 1 ? 's' : ''} waiting` : 'Offline') : s === 'saving' ? 'Saving' : 'Saved';
+  const text =
+    s === 'offline'
+      ? inflight.value
+        ? `Offline, ${inflight.value} change${inflight.value > 1 ? 's' : ''} waiting`
+        : 'Offline'
+      : s === 'saving'
+        ? 'Saving'
+        : 'Saved';
   return (
     <span class="gm-sync" role="status" aria-live="polite">
       <Icon name={s === 'offline' ? 'cloud-off' : 'cloud-check'} />
@@ -170,21 +256,34 @@ function AccountMenu({ onHelp }: { onHelp: () => void }) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!open) return;
-    const close = (e: MouseEvent) => { if (!ref.current?.contains(e.target as Node)) setOpen(false); };
+    const close = (e: MouseEvent) => {
+      if (!ref.current?.contains(e.target as Node)) setOpen(false);
+    };
     document.addEventListener('mousedown', close);
     return () => document.removeEventListener('mousedown', close);
   }, [open]);
   const t = theme.value;
   const first = (user.value?.displayName ?? '').split(' ')[0];
   return (
-    <div class="gm-account" ref={ref} onKeyDown={(e) => { if (e.key === 'Escape' && open) { e.stopPropagation(); setOpen(false); } }}>
+    <div
+      class="gm-account"
+      ref={ref}
+      onKeyDown={(e) => {
+        if (e.key === 'Escape' && open) {
+          e.stopPropagation();
+          setOpen(false);
+        }
+      }}
+    >
       <button type="button" class="gm-btn gm-account-btn" aria-expanded={open} aria-haspopup="true" onClick={() => setOpen(!open)}>
         <span class="gm-initials">{initials.value || 'You'}</span>
         <span class="gm-sr">Account and settings</span>
       </button>
       {open && (
         <div class="gm-menu">
-          <p class="gm-menu-who">{first || 'Signed in'} <span class="gm-quiet">· {uiRole.value}</span></p>
+          <p class="gm-menu-who">
+            {first || 'Signed in'} <span class="gm-quiet">· {uiRole.value}</span>
+          </p>
           <fieldset class="gm-seg">
             <legend>Theme</legend>
             {(['system', 'light', 'dark'] as const).map((v) => (
@@ -206,8 +305,19 @@ function AccountMenu({ onHelp }: { onHelp: () => void }) {
               ))}
             </fieldset>
           )}
-          <Button variant="quiet" icon="help" onClick={() => { setOpen(false); onHelp(); }}>Help and shortcuts</Button>
-          <Button variant="quiet" icon="logout" onClick={() => signOut()}>Sign out</Button>
+          <Button
+            variant="quiet"
+            icon="help"
+            onClick={() => {
+              setOpen(false);
+              onHelp();
+            }}
+          >
+            Help and shortcuts
+          </Button>
+          <Button variant="quiet" icon="logout" onClick={() => signOut()}>
+            Sign out
+          </Button>
         </div>
       )}
     </div>
@@ -218,7 +328,9 @@ function Toasts() {
   const list = toasts.value;
   return (
     <div class="gm-toasts" aria-live="polite" role="region" aria-label="Notifications">
-      {list.map((t) => <ToastItem key={t.id} t={t} />)}
+      {list.map((t) => (
+        <ToastItem key={t.id} t={t} />
+      ))}
     </div>
   );
 }
@@ -229,13 +341,26 @@ function ToastItem({ t }: { t: (typeof toasts.value)[number] }) {
     if (paused) return;
     const start = Date.now();
     const h = setTimeout(() => dismissToast(t.id), left.current);
-    return () => { clearTimeout(h); left.current -= Date.now() - start; };
+    return () => {
+      clearTimeout(h);
+      left.current -= Date.now() - start;
+    };
   }, [paused]);
   return (
-    <div class={`gm-toast ${t.tone === 'error' ? 'gm-toast-error' : ''}`} data-toast
-      onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)} onFocusIn={() => setPaused(true)} onFocusOut={() => setPaused(false)}>
+    <div
+      class={`gm-toast ${t.tone === 'error' ? 'gm-toast-error' : ''}`}
+      data-toast
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      onFocusIn={() => setPaused(true)}
+      onFocusOut={() => setPaused(false)}
+    >
       <span>{t.text}</span>
-      {t.undo && <Button icon="arrow-back-up" onClick={() => runUndo(t)}>Undo</Button>}
+      {t.undo && (
+        <Button icon={t.undo.label === 'Reload' ? 'refresh' : 'arrow-back-up'} onClick={() => runUndo(t)}>
+          {t.undo.label === 'Reload' ? 'Reload' : 'Undo'}
+        </Button>
+      )}
       <Button variant="quiet" icon="x" class="gm-iconbtn" aria-label="Dismiss" onClick={() => dismissToast(t.id)} />
     </div>
   );
@@ -260,9 +385,13 @@ function useGlobalKeys(setHelp: (b: boolean) => void) {
         return;
       }
       if (typing(e) || e.metaKey || e.ctrlKey || e.altKey || !shortcuts.value) return;
-      if (e.key === '/') { e.preventDefault(); document.getElementById('gm-search')?.focus(); }
-      else if (e.key === '?') { e.preventDefault(); setHelp(true); }
-      else window.dispatchEvent(new CustomEvent('gm-key', { detail: e.key }));
+      if (e.key === '/') {
+        e.preventDefault();
+        document.getElementById('gm-search')?.focus();
+      } else if (e.key === '?') {
+        e.preventDefault();
+        setHelp(true);
+      } else window.dispatchEvent(new CustomEvent('gm-key', { detail: e.key }));
     };
     addEventListener('keydown', h);
     return () => removeEventListener('keydown', h);
@@ -272,14 +401,18 @@ function useGlobalKeys(setHelp: (b: boolean) => void) {
 function HelpPanel({ onClose }: { onClose: () => void }) {
   const HelpBody = Help;
   const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => { ref.current?.querySelector('h2')?.focus(); }, []);
+  useEffect(() => {
+    ref.current?.querySelector('h2')?.focus();
+  }, []);
   return (
     <div class="gm-helppanel" role="dialog" aria-modal="false" aria-label="Help" ref={ref}>
       <div class="gm-sheet-head">
         <h2 tabIndex={-1}>Help</h2>
         <Button variant="quiet" icon="x" class="gm-iconbtn" aria-label="Close help" onClick={onClose} />
       </div>
-      <Suspense fallback={<p>Loading</p>}><HelpBody panel /></Suspense>
+      <Suspense fallback={<p>Loading</p>}>
+        <HelpBody panel />
+      </Suspense>
     </div>
   );
 }

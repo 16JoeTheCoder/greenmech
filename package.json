@@ -17,7 +17,8 @@
     "test:e2e": "npm run build:e2e && firebase emulators:exec --only auth,firestore \"playwright test\"",
     "build:e2e": "tsx scripts/gen-rules.ts --admins admin@test.example --out tests/rules/.test.rules && VITE_USE_EMULATORS=1 vite build --outDir dist-e2e",
     "size": "node scripts/size.mjs",
-    "gate:a": "npm run typecheck && npm run lint && npm run format && npm run contrast && npm run rules:check && npm run test:unit && npm run test:rules && npm run build && npm run size && npm run test:e2e"
+    "gate:a": "npm run typecheck && npm run lint && npm run format && npm run contrast && npm run rules:check && npm run test:unit && npm run test:rules && npm run build && npm run size && npm run test:headers && npm run test:e2e",
+    "test:headers": "node scripts/headers-check.mjs"
   },
   "repository": {
     "type": "git",
