@@ -463,7 +463,7 @@ function References({ m, refs }: { m: Module; refs: Ref[] }) {
                 <span>{r.title}</span>
               )}
               <span class="gm-quiet">
-                {r.kind === 'link' ? new URL(r.url!).hostname : 'vector'} · {ago(r.createdAt)}
+                {r.kind === 'link' ? hostOf(r.url) : 'vector'} · {ago(r.createdAt)}
               </span>
             </span>
             {(r.authorUid === user.value!.uid || isAdmin.value) && canPost.value && (
@@ -699,3 +699,11 @@ function History({ m }: { m: Module }) {
   );
 }
 void STATUS;
+
+const hostOf = (u: string | null) => {
+  try {
+    return new URL(u ?? '').hostname;
+  } catch {
+    return 'link';
+  }
+};

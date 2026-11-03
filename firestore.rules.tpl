@@ -4,7 +4,10 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{db}/documents {
     // ---------- identity ----------
-    function signedIn() { return request.auth != null && request.auth.token.email_verified == true; }
+    function signedIn() {
+      return request.auth != null && request.auth.token.email_verified == true
+        && request.auth.token.firebase.sign_in_provider == 'google.com';
+    }
     function uid() { return request.auth.uid; }
     function me() { return request.auth.token.email.lower(); }
     function isAdmin() { return signedIn() && me() in __ADMIN_EMAILS__; }
@@ -29,8 +32,9 @@ service cloud.firestore {
       return exists(/databases/$(db)/documents/modules/$(id)) && mod(id).deletedAt == null;
     }
     function slugShape(s) { return s is string && s.size() >= 2 && s.size() <= 32 && s.matches('^[a-z0-9]+(-[a-z0-9]+)*$'); }
-    function slugOwned(s, id) {
-      return slugShape(s) && getAfter(/databases/$(db)/documents/slugs/$(s)).data.refId == id;
+    function slugOwned(s, id, kind) {
+      return slugShape(s) && getAfter(/databases/$(db)/documents/slugs/$(s)).data.refId == id
+        && getAfter(/databases/$(db)/documents/slugs/$(s)).data.kind == kind;
     }
     function audit() { return d().updatedAt == request.time && d().updatedBy == uid(); }
     function port(p) { return p in ['none', 'ball', 'spin', 'push', 'water', 'other']; }
@@ -49,11 +53,11 @@ service cloud.firestore {
         && (d().deletedAt == null || d().deletedAt is timestamp)
         && audit();
     }
-    function slugUnchangedOrOwned(id) { return d().slug == resource.data.slug || slugOwned(d().slug, id); }
+    function slugUnchangedOrOwned(id) { return d().slug == resource.data.slug || slugOwned(d().slug, id, 'module'); }
 
     match /modules/{id} {
       allow read: if canRead() && (isAdmin() || resource.data.deletedAt == null);
-      allow create: if isMember() && moduleShape() && slugOwned(d().slug, id)
+      allow create: if isMember() && moduleShape() && slugOwned(d().slug, id, 'module')
         && d().status == 0 && d().tier == -1 && d().order == 0 && d().leaderUid == null && d().leaderInitials == null
         && d().deletedAt == null && d().createdBy == uid() && d().createdAt == request.time;
       allow update: if moduleShape() && d().createdBy == resource.data.createdBy && d().createdAt == resource.data.createdAt
@@ -76,8 +80,8 @@ service cloud.firestore {
       }
 
       match /body/{doc} {
-        allow read: if canRead() && doc == 'main';
-        allow create, update: if doc == 'main' && (isAdmin() || (isMember() && leads(id)))
+        allow read: if canRead() && doc == 'main' && (isAdmin() || mod(id).deletedAt == null);
+        allow create, update: if doc == 'main' && (isAdmin() || (isMember() && leads(id) && mod(id).deletedAt == null))
           && d().keys().hasOnly(['plan', 'model'])
           && str(d().plan, 0, 20000)
           && (d().model == null || (d().model is map && d().model.keys().hasOnly(['svg', 'updatedAt', 'updatedBy'])
@@ -98,10 +102,10 @@ service cloud.firestore {
       allow read: if canRead() && (isAdmin() || resource.data.deletedAt == null);
       allow create: if isMember() && connShape() && id == d().aId + '__' + d().bId && d().aId != d().bId
         && moduleLive(d().aId) && moduleLive(d().bId) && d().state == 1 && d().deletedAt == null
-        && d().createdBy == uid() && d().createdAt == request.time && slugOwned(d().slug, id);
+        && d().createdBy == uid() && d().createdAt == request.time && slugOwned(d().slug, id, 'connection');
       allow update: if connShape() && d().aId == resource.data.aId && d().bId == resource.data.bId
         && d().createdBy == resource.data.createdBy && d().createdAt == resource.data.createdAt
-        && (d().slug == resource.data.slug || slugOwned(d().slug, id))
+        && (d().slug == resource.data.slug || slugOwned(d().slug, id, 'connection'))
         && (d().state == resource.data.state || d().state == 1 || bothDone())
         && (isAdmin() || (isMember() && resource.data.deletedAt == null
             && (leads(resource.data.aId) || leads(resource.data.bId))
@@ -122,7 +126,7 @@ service cloud.firestore {
     // ---------- discussion and references ----------
     function authored() {
       return d().authorUid == uid() && d().authorInitials == myInitials()
-        && d().createdAt is timestamp && d().createdAt <= request.time;
+        && d().createdAt == request.time;
     }
     match /ideas/{id} {
       allow read: if canRead();
@@ -146,9 +150,9 @@ service cloud.firestore {
     match /refs/{id} {
       allow read: if canRead();
       allow create: if isMember() && exactKeys(['moduleId', 'kind', 'title', 'url', 'data', 'authorUid', 'createdAt'])
-        && d().authorUid == uid() && d().createdAt is timestamp && d().createdAt <= request.time
+        && d().authorUid == uid() && d().createdAt == request.time
         && str(d().title, 1, 120) && moduleLive(d().moduleId)
-        && ((d().kind == 'link' && str(d().url, 9, 2048) && d().url.matches('^https://[^\\s]+$') && d().data == null)
+        && ((d().kind == 'link' && str(d().url, 9, 2048) && d().url.matches('^https://[A-Za-z0-9.-]+(:[0-9]+)?(/[^\\s]*)?$') && d().data == null)
           || (d().kind == 'vector' && str(d().data, 1, 250000) && d().url == null));
       allow update: if false;
       allow delete: if isAdmin() || (isMember() && resource.data.authorUid == uid());

@@ -29,6 +29,13 @@ Each entry: what was decided, and why. "Unverified" means the official page coul
 - **Client-written audit entries can be forged by a member** (they control their browser). Rules force `actorUid` to equal the caller and `at` to be request time, so a member cannot impersonate another person, but they can write misleading summaries about themselves. The activity log is for coordination, not discipline. This is stated in Manage, Activity.
 - **Firebase pinned to v12** because `@firebase/rules-unit-testing@5` needs `firebase@^12`. `@firebase/app` and `@firebase/app-compat` are pinned with `overrides` to fix a duplicate-package install that broke both auth registration and the rules tests.
 - **Bundle.** The initial JS is about 216 KB gzip (target 250, cap 320), almost all of it Firebase Auth and Firestore. Module page, Connections, Monitor, Manage and Help are lazy chunks.
+- **Firestore connectivity probe.** The Firestore SDK requests `www.google.com/images/cleardot.gif` when probing the connection. It is SDK transport, not an asset; the CSP blocks it as an image in production and Firestore falls back without it. The offline test ignores it.
+- **Committed `firestore.rules`.** Not committed yet on purpose: it can only be generated once real admin emails replace the placeholders (SETUP step 4). The sync check enforces it from then on.
+- **Admin emails ship in the client bundle** (`config/admins.json`), as the brief designs it. Client admin status only decides which controls render; the rules are the boundary.
+- **Google-only sign-in** is enforced in the rules (`sign_in_provider == 'google.com'`) as well as in the console.
+- **Undo of a deleted idea, flag or reference** re-creates it with a fresh `createdAt` (rules forbid backdating), so it moves to the top of its list.
+- **Shared computers.** Sign-out terminates Firestore and clears its offline cache before returning to the sign-in screen.
+- **Accepted (P3):** access requests have no cap (only the admin reads them; Deny removes them); lists of ideas, flags and refs show the newest 50; no rate limit on `/__/auth/*` in code. Add a Cloudflare rate-limiting rule for that path if abuse appears.
 - **Ports.** "none" and "other" never trigger "Adapter needed"; only two concrete, different carriers do.
 
 ## Blocked hosts during the build

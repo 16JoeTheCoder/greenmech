@@ -3,16 +3,18 @@
 interface Env {
   FIREBASE_PROJECT_ID: string;
 }
-const DROP = new Set(['host', 'cookie', 'cf-connecting-ip', 'cf-ipcountry', 'cf-ray', 'cf-visitor', 'x-forwarded-for', 'x-real-ip']);
+const SAFE = new Set(['accept', 'accept-language', 'content-type', 'user-agent', 'x-client-version', 'origin', 'referer']);
 
 export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
   if (request.method !== 'GET' && request.method !== 'POST') return new Response('Method not allowed', { status: 405 });
-  if (!/^[a-z0-9-]{4,40}$/.test(env.FIREBASE_PROJECT_ID ?? '')) return new Response('FIREBASE_PROJECT_ID is not set', { status: 500 });
+  if (!/^[a-z0-9-]{4,40}$/.test(env.FIREBASE_PROJECT_ID ?? '') || env.FIREBASE_PROJECT_ID === 'your-firebase-project-id')
+    return new Response('FIREBASE_PROJECT_ID is not set', { status: 500 });
   const url = new URL(request.url);
-  if (!url.pathname.startsWith('/__/auth/')) return new Response('Not found', { status: 404 });
+  if (!url.pathname.startsWith('/__/auth/') || /%2e|%2f|\.\./i.test(request.url.slice(url.origin.length))) return new Response('Not found', { status: 404 });
+  if (Number(request.headers.get('content-length') ?? 0) > 65536) return new Response('Too large', { status: 413 });
   const target = `https://${env.FIREBASE_PROJECT_ID}.firebaseapp.com${url.pathname}${url.search}`;
   const headers = new Headers();
-  for (const [k, v] of request.headers) if (!DROP.has(k.toLowerCase())) headers.set(k, v);
+  for (const [k, v] of request.headers) if (SAFE.has(k.toLowerCase()) || k.toLowerCase().startsWith('x-firebase-')) headers.set(k, v);
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), 10000);
   try {

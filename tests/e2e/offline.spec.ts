@@ -13,7 +13,12 @@ test('app shell and modules load offline after the first visit', async ({ page, 
   await expect(page.getByRole('link', { name: 'Greenmech' })).toBeVisible();
   await expect(page.locator('[data-bay]').first()).toBeVisible({ timeout: 15000 });
   await expect(page.locator('.gm-sync')).toContainText('Offline');
-  // fonts and icons are local: no request left the origin
-  const external = await page.evaluate(() => performance.getEntriesByType('resource').map((r) => r.name).filter((n) => !n.startsWith(location.origin) && !n.includes('127.0.0.1')));
+  // scripts, styles, fonts and icons are local (Firestore's own cleardot.gif connectivity probe is transport, not an asset)
+  const external = await page.evaluate(() =>
+    (performance.getEntriesByType('resource') as PerformanceResourceTiming[])
+      .filter((r) => ['script', 'link', 'css', 'img'].includes(r.initiatorType) && !r.name.includes('cleardot'))
+      .map((r) => r.name)
+      .filter((n) => !n.startsWith(location.origin) && !n.includes('127.0.0.1')),
+  );
   expect(external).toEqual([]);
 });

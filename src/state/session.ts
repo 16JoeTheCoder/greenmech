@@ -9,7 +9,7 @@ import {
   signOut as fbSignOut,
   type User,
 } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, terminate, clearIndexedDbPersistence } from 'firebase/firestore';
 import { auth, db, USE_EMU } from './firebase';
 import admins from '../../config/admins.json';
 import type { Role } from '../lib/types';
@@ -89,7 +89,13 @@ export async function signInFixture(email: string) {
   await signInWithCredential(auth, GoogleAuthProvider.credential(JSON.stringify({ sub, email, email_verified: true })));
 }
 
-export const signOut = () => fbSignOut(auth);
+/** Signs out and wipes the offline cache, so the next person on a shared school computer sees nothing. */
+export async function signOut() {
+  await fbSignOut(auth);
+  await terminate(db).catch(() => {});
+  await clearIndexedDbPersistence(db).catch(() => {});
+  location.assign('/signin');
+}
 
 // ---------- per-user profile (theme, shortcuts) ----------
 export const theme = signal<'system' | 'light' | 'dark'>(readLocal('gm-theme', 'system') as 'system');

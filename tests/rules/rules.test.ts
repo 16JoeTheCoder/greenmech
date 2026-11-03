@@ -27,7 +27,9 @@ const users = {
 };
 type Who = keyof typeof users;
 const db = (w: Who, verified = true): Firestore =>
-  env.authenticatedContext(users[w].uid, { email: users[w].email, email_verified: verified }).firestore() as unknown as Firestore;
+  env
+    .authenticatedContext(users[w].uid, { email: users[w].email, email_verified: verified, firebase: { sign_in_provider: 'google.com' } } as never)
+    .firestore() as unknown as Firestore;
 const anon = () => env.unauthenticatedContext().firestore() as unknown as Firestore;
 
 const ts = Timestamp.fromDate(new Date('2026-01-01'));
@@ -244,6 +246,26 @@ describe('member: modules', () => {
   it('body model with extra key denied', () =>
     assertFails(setDoc(doc(db('m1'), 'modules/mA/body/main'), { plan: '', model: { svg: '<svg/>', updatedAt: serverTimestamp(), updatedBy: 'u-m1', x: 1 } })));
   it('coach reads body', () => assertSucceeds(getDoc(doc(db('coach'), 'modules/mA/body/main'))));
+  it('body of a deleted module is hidden from members', () => assertFails(getDoc(doc(db('m1'), 'modules/mDel/body/main'))));
+  it('admin writes any body', () => assertSucceeds(setDoc(doc(db('admin'), 'modules/mC/body/main'), { plan: 'x', model: null })));
+  it('slug registered with the wrong kind is denied', async () => {
+    const f = db('m1');
+    const b = writeBatch(f);
+    b.update(doc(f, 'modules/mA'), { slug: 'start-ramp', ...audit('m1') });
+    b.set(doc(f, 'slugs/start-ramp'), { kind: 'connection', refId: 'mA' });
+    await assertFails(b.commit());
+  });
+  it('registry entry with an extra key is denied', () => assertFails(setDoc(doc(db('m1'), 'slugs/zz-top'), { kind: 'module', refId: 'mA', x: 1 })));
+  it('coach cannot write slugs', () => assertFails(setDoc(doc(db('coach'), 'slugs/zz-top'), { kind: 'module', refId: 'mA' })));
+  it('update cannot forge createdBy', () => assertFails(updateDoc(doc(db('m1'), 'modules/mA'), { status: 2, createdBy: 'u-m1', ...audit('m1') })));
+  it('member cannot claim a soft-deleted module', () =>
+    assertFails(updateDoc(doc(db('m1'), 'modules/mDel'), { leaderUid: 'u-m1', leaderInitials: 'P1', ...audit('m1') })));
+  it('listed member cannot file an access request', () =>
+    assertFails(setDoc(doc(db('m1'), 'accessRequests/u-m1'), { email: 'member1@test.example', displayName: 'M', requestedAt: serverTimestamp() })));
+  it('member cannot write another user profile', () => assertFails(setDoc(doc(db('m1'), 'users/u-m2'), { theme: 'dark' })));
+  it('coach cannot delete a flag', () => assertFails(deleteDoc(doc(db('coach'), 'flags/f1'))));
+  it('admin cannot delete config', () => assertFails(deleteDoc(doc(db('admin'), 'config/app'))));
+  it('coach cannot update a connection', () => assertFails(updateDoc(doc(db('coach'), 'connections/mA__mB'), { state: 2, ...audit('coach') })));
 });
 
 describe('connections', () => {
@@ -333,7 +355,24 @@ describe('ideas, flags, refs', () => {
   it('idea cannot be edited', () => assertFails(updateDoc(doc(db('m1'), 'ideas/i1'), { text: 'changed' })));
   it('author deletes own idea', () => assertSucceeds(deleteDoc(doc(db('m1'), 'ideas/i1'))));
   it('other member cannot delete idea', () => assertFails(deleteDoc(doc(db('m2'), 'ideas/i1'))));
-  it('undo re-creates idea with original createdAt', () => assertSucceeds(idea('m1', 'P1', { createdAt: ts })));
+  it('backdated idea is denied', () => assertFails(idea('m1', 'P1', { createdAt: ts })));
+  it('link with a malformed host is denied', () => assertFails(ref({ url: 'https://[' })));
+  it('other member cannot delete a ref', async () => {
+    await env.withSecurityRulesDisabled((c) =>
+      setDoc(doc(c.firestore(), 'refs/r9'), {
+        moduleId: 'mA',
+        kind: 'link',
+        title: 'x',
+        url: 'https://a.example',
+        data: null,
+        authorUid: 'u-m2',
+        createdAt: ts,
+      }),
+    );
+    await assertFails(deleteDoc(doc(db('m1'), 'refs/r9')));
+    await assertSucceeds(deleteDoc(doc(db('m2'), 'refs/r9')));
+  });
+  it('ref on a deleted module is denied', () => assertFails(ref({ moduleId: 'mDel' })));
   it('member adds flag', () => assertSucceeds(flag('m2', 'P2')));
   it('flag cannot be created resolved', () => assertFails(flag('m2', 'P2', { resolved: true, resolvedBy: 'u-m2' })));
   it('flag author resolves own flag', () =>

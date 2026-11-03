@@ -415,7 +415,8 @@ export function removeDoc(coll: 'ideas' | 'flags' | 'refs', id: string, data: Re
     undoable('delete', null, {}, async () => {
       const r = writeBatch(db);
       // flags are re-created unresolved: the rules only allow creating open flags
-      const restored = coll === 'flags' ? { ...data, resolved: false, resolvedBy: null, resolvedAt: null } : data;
+      const fresh = { ...data, createdAt: serverTimestamp() };
+      const restored = coll === 'flags' ? { ...fresh, resolved: false, resolvedBy: null, resolvedAt: null } : fresh;
       r.set(doc(db, coll, id), restored);
       act(r, 'restore', 'module', moduleId, m.slug, `restored ${label} on ${m.slug}`);
       commit(r, 'Not restored');

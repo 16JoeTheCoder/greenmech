@@ -1,6 +1,10 @@
 {
   "note": "Sample structure from BUILD_PROMPT.md Appendix A. Sample data, not real progress.",
-  "tiers": [["intake-ramp", "gear-train", "lift-arm", "spring-catch", "wheel-drive"], ["funnel", "pendulum", "solar-updraft"], ["water-tank", "turbine"]],
+  "tiers": [
+    ["intake-ramp", "gear-train", "lift-arm", "spring-catch", "wheel-drive"],
+    ["funnel", "pendulum", "solar-updraft"],
+    ["water-tank", "turbine"]
+  ],
   "modules": {
     "intake-ramp": { "status": 3, "in": "none", "out": "ball", "purpose": "Sample: starts the run by releasing the ball down a ramp" },
     "gear-train": { "status": 3, "in": "ball", "out": "spin", "purpose": "Sample: the falling ball turns a set of gears" },
@@ -14,8 +18,14 @@
     "turbine": { "status": 0, "in": "water", "out": "none", "purpose": "Sample: water spins a turbine to finish the run" }
   },
   "connections": [
-    ["ramp-feed", "intake-ramp", "gear-train"], ["gear-lift", "gear-train", "lift-arm"], ["arm-catch", "lift-arm", "spring-catch"],
-    ["catch-drive", "spring-catch", "wheel-drive"], ["drive-updraft", "wheel-drive", "solar-updraft"], ["updraft-swing", "solar-updraft", "pendulum"],
-    ["swing-funnel", "pendulum", "funnel"], ["funnel-fill", "funnel", "water-tank"], ["tank-spin", "water-tank", "turbine"]
+    ["ramp-feed", "intake-ramp", "gear-train"],
+    ["gear-lift", "gear-train", "lift-arm"],
+    ["arm-catch", "lift-arm", "spring-catch"],
+    ["catch-drive", "spring-catch", "wheel-drive"],
+    ["drive-updraft", "wheel-drive", "solar-updraft"],
+    ["updraft-swing", "solar-updraft", "pendulum"],
+    ["swing-funnel", "pendulum", "funnel"],
+    ["funnel-fill", "funnel", "water-tank"],
+    ["tank-spin", "water-tank", "turbine"]
   ]
 }
