@@ -1,0 +1,9 @@
+node_modules
+dist
+dist-e2e
+.env.local
+*.log
+test-results
+playwright-report
+tests/rules/.test.rules
+.wrangler
