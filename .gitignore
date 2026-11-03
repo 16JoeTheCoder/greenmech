@@ -7,3 +7,4 @@ test-results
 playwright-report
 tests/rules/.test.rules
 .wrangler
+/test-results/

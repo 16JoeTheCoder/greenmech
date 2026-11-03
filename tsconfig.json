@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "target": "ES2022", "module": "ESNext", "moduleResolution": "bundler", "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx", "jsxImportSource": "preact", "strict": true, "noEmit": true, "skipLibCheck": true,
+    "resolveJsonModule": true, "allowImportingTsExtensions": true, "isolatedModules": true, "noUnusedLocals": true,
+    "types": ["vite/client", "vite-plugin-pwa/client", "@cloudflare/workers-types"],
+    "paths": { "react": ["./node_modules/preact/compat"], "react-dom": ["./node_modules/preact/compat"] }
+  },
+  "include": ["src", "tests", "scripts", "functions", "vite.config.ts", "playwright.config.ts", "vitest.config.ts"]
+}

@@ -1,0 +1,21 @@
+{
+  "note": "Sample structure from BUILD_PROMPT.md Appendix A. Sample data, not real progress.",
+  "tiers": [["intake-ramp", "gear-train", "lift-arm", "spring-catch", "wheel-drive"], ["funnel", "pendulum", "solar-updraft"], ["water-tank", "turbine"]],
+  "modules": {
+    "intake-ramp": { "status": 3, "in": "none", "out": "ball", "purpose": "Sample: starts the run by releasing the ball down a ramp" },
+    "gear-train": { "status": 3, "in": "ball", "out": "spin", "purpose": "Sample: the falling ball turns a set of gears" },
+    "lift-arm": { "status": 2, "in": "push", "out": "ball", "purpose": "Sample: an arm lifts the ball to the next level" },
+    "spring-catch": { "status": 1, "in": "ball", "out": "ball", "purpose": "Sample: a spring catches the ball and throws it on" },
+    "wheel-drive": { "status": 0, "in": "ball", "out": "push", "purpose": "Sample: a wheel converts the ball's weight into a push" },
+    "funnel": { "status": 0, "in": "ball", "out": "water", "purpose": "Sample: the ball tips a funnel that pours water" },
+    "pendulum": { "status": 2, "in": "spin", "out": "ball", "purpose": "Sample: a swinging pendulum knocks the ball forward" },
+    "solar-updraft": { "status": 1, "in": "push", "out": "spin", "purpose": "Sample: warm air rises and turns a fan" },
+    "water-tank": { "status": 0, "in": "water", "out": "water", "purpose": "Sample: a tank fills and overflows on cue" },
+    "turbine": { "status": 0, "in": "water", "out": "none", "purpose": "Sample: water spins a turbine to finish the run" }
+  },
+  "connections": [
+    ["ramp-feed", "intake-ramp", "gear-train"], ["gear-lift", "gear-train", "lift-arm"], ["arm-catch", "lift-arm", "spring-catch"],
+    ["catch-drive", "spring-catch", "wheel-drive"], ["drive-updraft", "wheel-drive", "solar-updraft"], ["updraft-swing", "solar-updraft", "pendulum"],
+    ["swing-funnel", "pendulum", "funnel"], ["funnel-fill", "funnel", "water-tank"], ["tank-spin", "water-tank", "turbine"]
+  ]
+}
