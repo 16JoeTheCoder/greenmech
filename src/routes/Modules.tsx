@@ -37,7 +37,7 @@ export function Headline() {
   });
   return (
     <div class="gm-headline">
-      <h1 aria-live="polite">
+      <h1>
         {building.length === 0 ? (
           ms.length ? (
             done === ms.length ? (
@@ -56,7 +56,7 @@ export function Headline() {
         )}
       </h1>
       {ms.length > 0 && (
-        <p class="gm-quiet gm-tally">
+        <p class="gm-quiet gm-tally" role="status">
           <span class="gm-done-count" data-done={done}>
             {done} of {ms.length} done
           </span>
@@ -176,7 +176,7 @@ function ModuleList({ ms, isMatch, onPick }: { ms: Module[]; isMatch?: (m: Modul
                 <button type="button" class={`gm-row ${isMatch && !isMatch(m) ? 'gm-row-dim' : ''}`} onClick={() => onPick(m)} data-row={m.id}>
                   <Slug>{m.slug}</Slug>
                   <StatusBadge status={m.status} />
-                  <span class="gm-initials">{m.leaderInitials ?? 'no lead'}</span>
+                  {m.leaderInitials ? <span class="gm-initials">{m.leaderInitials}</span> : <span class="gm-sr">no leader</span>}
                   {(flags.get(m.id) ?? 0) > 0 && <span class="gm-dot" aria-label={`${flags.get(m.id)} open flags`} role="img" />}
                 </button>
               </li>

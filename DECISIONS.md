@@ -36,6 +36,8 @@ Each entry: what was decided, and why. "Unverified" means the official page coul
 - **Undo of a deleted idea, flag or reference** re-creates it with a fresh `createdAt` (rules forbid backdating), so it moves to the top of its list.
 - **Shared computers.** Sign-out terminates Firestore and clears its offline cache before returning to the sign-in screen.
 - **Accepted (P3):** access requests have no cap (only the admin reads them; Deny removes them); lists of ideas, flags and refs show the newest 50; no rate limit on `/__/auth/*` in code. Add a Cloudflare rate-limiting rule for that path if abuse appears.
+- **Esc with the help panel open** closes help first: it is the topmost layer, so it precedes the brief's order (search, sheet, toast, back).
+- **Accepted UX P2/P3s:** phone sheet is non-modal (no scrim), so the drawing behind stays usable; dense line runs in the Connections gutter are acceptable at 10 modules, and the side list is the source of truth.
 - **Ports.** "none" and "other" never trigger "Adapter needed"; only two concrete, different carriers do.
 
 ## Blocked hosts during the build

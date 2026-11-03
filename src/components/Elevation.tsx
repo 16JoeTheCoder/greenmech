@@ -48,7 +48,7 @@ function Bay({
   hint: string | null;
 }) {
   const s = STATUS[m.status];
-  const name = `${m.leaderInitials ? `, led by ${m.leaderInitials}` : ''}${flags ? `, ${flags} open flag${flags > 1 ? 's' : ''}` : ''}${hint ? `. ${hint}` : ''}`;
+  const name = `${m.leaderInitials ? `, led by ${m.leaderInitials}` : ', no leader'}${flags ? `, ${flags} open flag${flags > 1 ? 's' : ''}` : ''}${hint ? `. ${hint}` : ''}`;
   return (
     <button
       type="button"
@@ -64,7 +64,7 @@ function Bay({
       )}
       <span class="gm-bay-top">
         <Icon name="box" />
-        {m.leaderInitials ? <span class="gm-initials">{m.leaderInitials}</span> : <span class="gm-initials gm-initials-none">no lead</span>}
+        {m.leaderInitials && <span class="gm-initials">{m.leaderInitials}</span>}
       </span>
       <span class="gm-bay-slug">{m.slug}</span>
       {name && <span class="gm-sr">{name}</span>}

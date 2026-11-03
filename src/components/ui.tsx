@@ -182,7 +182,12 @@ export function Sheet({ title, onClose, children }: { title: ComponentChildren; 
   useEffect(() => {
     const prev = document.activeElement as HTMLElement | null;
     ref.current?.querySelector<HTMLElement>('h2')?.focus();
-    return () => prev?.focus?.();
+    const bay = prev?.getAttribute('data-bay') ?? prev?.getAttribute('data-row');
+    return () => {
+      // the opener may have re-rendered away: find it again by id, else fall back to the page heading
+      const again = bay ? document.querySelector<HTMLElement>(`[data-bay="${bay}"],[data-row="${bay}"]`) : prev;
+      (again?.isConnected ? again : document.querySelector<HTMLElement>('main h1'))?.focus?.();
+    };
   }, []);
   return (
     <aside class="gm-sheet" ref={ref} aria-label="Module details" data-sheet>

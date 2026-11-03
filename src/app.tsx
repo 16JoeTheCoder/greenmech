@@ -402,7 +402,9 @@ function HelpPanel({ onClose }: { onClose: () => void }) {
   const HelpBody = Help;
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
+    const opener = document.activeElement as HTMLElement | null;
     ref.current?.querySelector('h2')?.focus();
+    return () => opener?.focus?.();
   }, []);
   return (
     <div class="gm-helppanel" role="dialog" aria-modal="false" aria-label="Help" ref={ref}>
