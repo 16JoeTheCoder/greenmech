@@ -1,1 +1,7 @@
-{ "projects": { "default": "demo-greenmech" } }
+{
+  "projects": {
+    "default": "greenmech-stjbs"
+  },
+  "targets": {},
+  "etags": {}
+}
