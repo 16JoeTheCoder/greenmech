@@ -10,7 +10,7 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
   if (!/^[a-z0-9-]{4,40}$/.test(env.FIREBASE_PROJECT_ID ?? '') || env.FIREBASE_PROJECT_ID === 'your-firebase-project-id')
     return new Response('FIREBASE_PROJECT_ID is not set', { status: 500 });
   const url = new URL(request.url);
-  if (!url.pathname.startsWith('/__/auth/') || /%2e|%2f|\.\./i.test(request.url.slice(url.origin.length))) return new Response('Not found', { status: 404 });
+  if (!url.pathname.startsWith('/__/auth/') || /%2e|%2f|\.\./i.test(url.pathname)) return new Response('Not found', { status: 404 });
   if (Number(request.headers.get('content-length') ?? 0) > 65536) return new Response('Too large', { status: 413 });
   const target = `https://${env.FIREBASE_PROJECT_ID}.firebaseapp.com${url.pathname}${url.search}`;
   const headers = new Headers();
